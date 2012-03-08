@@ -10,6 +10,6 @@
  * - $content: Render array of content.
  */
 ?>
-<div class="<?php print $classes; ?> clearfix"<?php print $attributes; ?>>
+<div<?php print $attributes; ?>>
     <?php echo render($content); ?>
 </div>
