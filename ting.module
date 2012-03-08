@@ -259,7 +259,7 @@ function ting_block_view($delta = '') {
 
         foreach( $relations as $key => $relation ) {
           if( isset($relation_types[$key]) ) {
-            $items[] = l($relation_types[$key].' ('.count($relation).') ','#'.$key,array('external'=>TRUE));
+            $items[] = l($relation_types[$key] . ' (' . count($relation) . ') ', '#' . urlencode($key), array('external'=>TRUE));
           }
         }
         $block['content'] =
@@ -279,7 +279,7 @@ function ting_block_view($delta = '') {
         $block['subject'] = render($block['subject']);
         $items = array();
         foreach ($collection->types as $type) {
-          $items[] = l($type . ' (' . $collection->types_count[$type] . ')', '#' . $type, array('external' => TRUE ));
+          $items[] = l($type . ' (' . $collection->types_count[$type] . ')', '#' . urlencode($type), array('external' => TRUE ));
         }
         $block['content'] = array(
           '#theme' => 'item_list',

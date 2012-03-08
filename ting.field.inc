@@ -282,7 +282,7 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
 
     foreach ($entity->types as $type) {
       $element[0][$type] = array(
-        '#prefix' => '<h2>' . $type . '</h2><a name="' . $type . '"></a>',
+        '#prefix' => '<h2>' . $type . '</h2><a name="' . urlencode($type) . '"></a>',
       );
     }
     foreach ($entities as $sub_entity) {
@@ -366,9 +366,9 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
             ));
           }
         }
-	elseif($entity->date != '') {
-	  $markup_string = t('(@year)', array('@year'=>$entity->date));
-	}
+  elseif($entity->date != '') {
+    $markup_string = t('(@year)', array('@year'=>$entity->date));
+  }
         $element[$delta] = array(
           '#markup' => $markup_string,
         );
