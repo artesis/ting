@@ -252,8 +252,8 @@ function ting_block_view($delta = '') {
         $relation_types = module_invoke_all('anchor_info');
         $block['subject'] = array(
           '#markup' => t('About the material'),
-          '#prefix' => '<div class="ting-relations-header">',
-          '#suffix' => '</div>',
+          '#prefix' => '<span class="ting-relations-header">',
+          '#suffix' => '</span>',
         );
         $block['subject'] = render($block['subject']);
 
@@ -273,8 +273,8 @@ function ting_block_view($delta = '') {
       if ($collection = menu_get_object('ting_collection', 2)) {
         $block['subject'] = array(
           '#markup' => t('Types'),
-          '#prefix' => '<div class="ting-collection-types-header">',
-          '#suffix' => '</div>',
+          '#prefix' => '<span class="ting-collection-types-header">',
+          '#suffix' => '</span>',
         );
         $block['subject'] = render($block['subject']);
         $items = array();
@@ -292,8 +292,8 @@ function ting_block_view($delta = '') {
         ($collection = ting_collection_load($object->id))) {
         $block['subject'] = array(
           '#markup' => t('Other materialtypes'),
-          '#prefix' => '<div class="ting-object-types-header">',
-          '#suffix' => '</div>',
+          '#prefix' => '<span class="ting-object-types-header">',
+          '#suffix' => '</span>',
         );
         $block['subject'] = render($block['subject']);
         $items = array();
