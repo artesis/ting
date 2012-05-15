@@ -102,6 +102,13 @@ function ting_admin_ting_settings($form_state) {
     '#default_value' => variable_get('ting_search_profile', ''),
   );
 
+  $form['ting']['ting_search_openformat'] = array(
+    '#type' => 'textfield',
+    '#title' => t('OpenFormat profile'),
+    '#description' => t('OpenFormat format name. Leave blank if using the default search result format (dkabm).'),
+    '#default_value' => variable_get('ting_search_openformat', 'dkabm'),
+  );
+
   return system_settings_form($form);
 }
 

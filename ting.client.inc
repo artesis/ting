@@ -59,7 +59,7 @@ function ting_get_object($object_id, $collection = FALSE) {
 
       $profile = variable_get('ting_search_profile', '');
       if (!empty($profile) && method_exists($request, 'setProfile')) {
-	$request->setProfile($profile);
+        $request->setProfile($profile);
       }
 
       $request->setAllObjects(false);
