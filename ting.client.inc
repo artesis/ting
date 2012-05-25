@@ -127,7 +127,6 @@ function ting_get_objects($ids) {
     $request->setAllObjects(TRUE);
 
     $result = ting_execute_cache($request);
-
     if ($result && is_array($result->collections)) {
       foreach ($result->collections as $collection) {
         if (is_array($collection->objects) && sizeof($collection->objects)) {
@@ -172,15 +171,11 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
   $request->setStart($results_per_page * ($page - 1) + 1);
   $request->setNumResults($results_per_page);
 
-  if (!isset($options['facets']) and module_exists('ding_facetbrowser')) {
-    $options['facets'] = array();
-    // Populate facets with configured facets.
-    foreach (variable_get('ding_facetbrowser_facets', array()) as $facet) {
-      $options['facets'][] = $facet['name'];
-    }
-  }
 
-  $request->setFacets((isset($options['facets'])) ? $options['facets'] : array('facet.subject', 'facet.creator', 'facet.type', 'facet.category', 'facet.language', 'facet.date', 'facet.acSource'));
+//pjo testing @TODO this should be set elsewhere
+$request->setObjectFormat('bibliotekdkWorkDisplay');
+
+
   $request->setNumFacets((isset($options['numFacets'])) ? $options['numFacets'] : ((sizeof($request->getFacets()) == 0) ? 0 : 10));
   if (isset($options['sort']) && $options['sort']) {
     $request->setSort($options['sort']);
@@ -241,6 +236,18 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
     $request->userDefinedBoost = array('boostField' => $uboosts);
   }
 
+  if (!isset($options['facets']) and module_exists('ding_facetbrowser')) {
+    $options['facets'] = array();
+    // Populate facets with configured facets.
+    foreach (variable_get('ding_facetbrowser_facets', array()) as $facet) {
+      $options['facets'][] = $facet['name'];
+    }
+  }
+  // get cached facets
+  if (!$facets = cache_get($request->cacheKey())) {
+    $request->setFacets((isset($options['facets'])) ? $options['facets'] : array('facet.subject', 'facet.creator', 'facet.type', 'facet.category', 'facet.language', 'facet.date', 'facet.acSource'));
+  }
+  
   $search_result = ting_execute_cache($request);
   // Replace collections with proper TingCollection objects.
   if ($search_result && is_array($search_result->collections)) {
@@ -254,7 +261,12 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
       $search_result->collections = entity_load('ting_collection', array(), array('ding_entity_id' => $ids));
     }
   }
-
+  if( !$facets )  {
+    cache_set($request->cacheKey(), $search_result->facets, 'cache',CACHE_TEMPORARY);
+  }
+  else {
+    $search_result->facets = $facets->data;
+  }
   return $search_result;
 }
 
