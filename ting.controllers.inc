@@ -106,14 +106,24 @@ class TingObjectController extends DrupalDefaultEntityController {
           $ting_object = array(
             'ding_entity_id' => $ding_entity_id,
           );
-          drupal_write_record('ting_object', $ting_object);
-          drupal_write_record('ting_object_revision', $ting_object);
-          db_update('ting_object')
-            ->fields(array('vid' => $ting_object['vid']))
-            ->condition('tid', $ting_object['tid'])
-            ->execute();
-          // Add new id to the loaded set.
-          $new_ids[] = $ting_object['tid'];
+          // Start of transaction: the following queries are one atomic operation.
+          $transaction = db_transaction();
+          try {
+            drupal_write_record('ting_object', $ting_object);
+            drupal_write_record('ting_object_revision', $ting_object);
+            db_update('ting_object')
+              ->fields(array('vid' => $ting_object['vid']))
+              ->condition('tid', $ting_object['tid'])
+              ->execute();
+            unset($transaction);
+            // Add new id to the loaded set.
+            $new_ids[] = $ting_object['tid'];
+          }
+          catch (Exception $e) {
+            $transaction->rollback();
+            watchdog_exception('ting_object', $e);
+          }
+          // End of transaction, Drupal automatically calls commit (__destruct method).
         }
       }
       if ($new_ids) {
