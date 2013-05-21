@@ -253,7 +253,8 @@ function ting_block_view($delta = '') {
   switch ($delta) {
     case 'ting_relation_anchors':
       $items = array();
-      if ($object = menu_get_object('ting_object', 2)) {
+      $object = menu_get_object('ting_object', 2);
+      if (!empty($object)) {
         $relations = ting_get_relations($object);
         $relation_types = module_invoke_all('anchor_info');
         $block['subject'] = array(
@@ -400,49 +401,16 @@ function ting_entity_info() {
           'label' => t('Teaser'),
           'custom settings' => TRUE,
         ),
+        'search_result' => array(
+          'label' => t('Search result'),
+          'custom settings' => TRUE,
+        ),
       ),
       'bundles' => array(
         'ting_object' => array(
           'label' => 'Ting object',
           'admin' => array(
             'path' => 'admin/structure/ting_object',
-            'access arguments' => array('administer content types'),
-          ),
-        ),
-      ),
-    ),
-    'ting_collection' => array(
-      'label' => t('Ting collection'),
-      'controller class' => 'TingCollectionController',
-      // Some modules assume that fieldable entities has a base
-      // table. Specify the object table as each collection is also an
-      // object.
-      'base table' => 'ting_object',
-      'uri callback' => 'ting_collection_uri',
-      'ding_entity_type' => 'ding_entity_collection',
-      'ding_entity_menu' => 'ting/collection/%ting_collection',
-      'ding_entity_index' => 2,
-      'fieldable' => TRUE,
-      'entity keys' => array(
-        // We don't really have an ID, but use the ding_entity_id,
-        // so we can use entity_uri.
-        'id' => 'ding_entity_id',
-      ),
-      'view modes' => array(
-        'full' => array(
-          'label' => t('Full content'),
-          'custom settings' => FALSE,
-        ),
-        'teaser' => array(
-          'label' => t('Teaser'),
-          'custom settings' => TRUE,
-        ),
-      ),
-      'bundles' => array(
-        'ting_collection' => array(
-          'label' => 'Ting collection',
-          'admin' => array(
-            'path' => 'admin/structure/ting_collection',
             'access arguments' => array('administer content types'),
           ),
         ),
@@ -465,12 +433,12 @@ function ting_registry_files_alter(&$files, $modules) {
   );
 
   // Add all of the Ting client library to the registry.
-  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client/lib', '/\.php$/') as $filename => $dummy) {
+  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client2/lib', '/\.php$/') as $filename => $dummy) {
     $files[$filename] = $def;
   }
 
   // And the Ting client unit tests as well.
-  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client/tests', '/\.test$/') as $filename => $dummy) {
+  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client2/tests', '/\.test$/') as $filename => $dummy) {
     $files[$filename] = $def;
   }
 }
@@ -526,34 +494,10 @@ function ting_object_page_view($object) {
 }
 
 /**
- * Page callback: Display a ting collection.
- */
-function ting_collection_page_view($object) {
-  if (sizeof($object->entities) < 2) {
-    drupal_goto('ting/object/' . $object->id);
-  }
-  return ting_collection_view($object);
-}
-
-/**
  * Page title callback.
  */
 function ting_page_title($object) {
   return htmlspecialchars($object->title, ENT_NOQUOTES, 'UTF-8');
-}
-
-/**
- * Callback for entity_uri(). Returns the uri for the object.
- */
-function ting_object_uri($collection) {
-  return array('path' => 'ting/object/' . $collection->id);
-}
-
-/**
- * Callback for entity_uri(). Returns the uri for the collection.
- */
-function ting_collection_uri($collection) {
-  return array('path' => 'ting/collection/' . $collection->id);
 }
 
 /**
@@ -593,72 +537,6 @@ function ting_object_load_multiple($ids) {
  */
 function ting_collection_load($id) {
   return ding_entity_load($id, 'ting_collection');
-}
-
-/**
- * Display a ting object.
- */
-function ting_object_view($object, $view_mode = 'full', $langcode = NULL) {
-  if (!isset($langcode)) {
-    $langcode = $GLOBALS['language_content']->language;
-  }
-  $object->content = array();
-
-  // _field_invoke_multiple gets pissy if the arrays aren't indexed by the
-  // local ID.
-  field_attach_prepare_view('ting_object', array($object->tid => $object), $view_mode, $langcode);
-  entity_prepare_view('ting_object', array($object->id => $object), $langcode);
-  $object->content += field_attach_view('ting_object', $object, $view_mode, $langcode);
-
-  // Allow modules to make their own additions to the object.
-  module_invoke_all('ding_entity_view', $object, $view_mode, $langcode);
-  module_invoke_all('entity_view', $object, 'ting_object', $view_mode, $langcode);
-
-  $build = $object->content;
-  unset($object->content);
-
-  $build += array(
-    '#theme' => 'ting_object',
-    '#object' => $object,
-    '#view_mode' => $view_mode,
-  );
-
-  drupal_alter('ting_view', $build);
-
-  return $build;
-}
-
-/**
- * Display a ting collection.
- */
-function ting_collection_view($object, $view_mode = 'full', $langcode = NULL) {
-  if (!isset($langcode)) {
-    $langcode = $GLOBALS['language_content']->language;
-  }
-  $object->content = array();
-
-  // _field_invoke_multiple gets pissy if the arrays aren't indexed by the
-  // local ID.
-  field_attach_prepare_view('ting_collection', array($object->ding_entity_id => $object), $view_mode, $langcode);
-  entity_prepare_view('ting_collection', array($object->id => $object), $langcode);
-  $object->content += field_attach_view('ting_collection', $object, $view_mode, $langcode);
-
-  // Allow modules to make their own additions to the collection.
-  module_invoke_all('ding_entity_collection_view', $object, $view_mode, $langcode);
-  module_invoke_all('entity_view', $object, 'ting_collection', $view_mode, $langcode);
-
-  $build = $object->content;
-  unset($object->content);
-
-  $build += array(
-    // TODO: Separate theming?
-    '#theme' => 'ting_object',
-    '#object' => $object,
-    '#view_mode' => $view_mode,
-  );
-
-  drupal_alter('ting_collection_view', $build);
-  return $build;
 }
 
 /**
@@ -934,4 +812,37 @@ function _ting_anchor_name($type) {
   $name = str_replace(' ', '-', $name);
   $name = strtolower($name);
   return $name;
+}
+
+/**
+ * Display a ting object.
+ */
+function ting_object_view($object, $view_mode = 'full', $langcode = NULL) {
+  if (!isset($langcode)) {
+    $langcode = $GLOBALS['language_content']->language;
+  }
+  $object->content = array();
+
+  // _field_invoke_multiple gets pissy if the arrays aren't indexed by the
+  // local ID.
+  field_attach_prepare_view('ting_object', array($object->tid => $object), $view_mode, $langcode);
+  entity_prepare_view('ting_object', array($object->tid => $object), $langcode);
+  $object->content += field_attach_view('ting_object', $object, $view_mode, $langcode);
+
+  // Allow modules to make their own additions to the object.
+  module_invoke_all('ding_entity_view', $object, $view_mode, $langcode);
+  module_invoke_all('entity_view', $object, 'ting_object', $view_mode, $langcode);
+
+  $build = $object->content;
+  unset($object->content);
+
+  $build += array(
+    '#theme' => 'ting_object',
+    '#object' => $object,
+    '#view_mode' => $view_mode,
+  );
+
+  drupal_alter('ting_view', $build);
+
+  return $build;
 }
