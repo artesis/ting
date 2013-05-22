@@ -51,7 +51,7 @@ function ting_menu() {
   $items['ting/object/%ting_object'] = array(
     'title callback' => 'ting_page_title',
     'title arguments' => array(2),
-    'page callback' => 'ting_object_page_view',
+    'page callback' => 'ting_object_page_view2',
     'page arguments' => array(2),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK | MENU_VISIBLE_IN_BREADCRUMB,
@@ -519,20 +519,17 @@ function ting_page_alter(&$page) {
 }
 
 /**
- * Page callback: Display a ting object.
+ * Redirect by default instead of page rendering.
  */
-function ting_object_page_view($object) {
-  return ting_object_view($object);
+function ting_object_page_view2($object) {
+  drupal_goto('search/ting/' . $object->localId, array('query' => array('permalink' => 1)), 301);
 }
 
 /**
- * Page callback: Display a ting collection.
+ * Redirect by default instead of page rendering.
  */
 function ting_collection_page_view($object) {
-  if (sizeof($object->entities) < 2) {
-    drupal_goto('ting/object/' . $object->id);
-  }
-  return ting_collection_view($object);
+  drupal_goto('search/ting/' . $object->localId, array('query' => array('permalink' => 1)), 301);
 }
 
 /**
@@ -546,7 +543,7 @@ function ting_page_title($object) {
  * Callback for entity_uri(). Returns the uri for the object.
  */
 function ting_object_uri($collection) {
-  return array('path' => 'ting/object/' . $collection->id);
+  return array('path' => 'search/ting/' . $collection->localId, 'options' => array('query' => array('permalink' => 1)));
 }
 
 /**
