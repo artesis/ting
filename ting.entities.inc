@@ -36,45 +36,45 @@ class TingRelation extends DingEntityBase {
  */
 class TingEntity extends DingEntity {
 
-  public $type = DingEntityBase::NULL;
+  protected $type = DingEntityBase::NULL;
 
-  public $serieNumber = DingEntityBase::NULL;
+  protected $serieNumber = DingEntityBase::NULL;
 
-  public $serieTitle = DingEntityBase::NULL;
+  protected $serieTitle = DingEntityBase::NULL;
 
-  public $record = DingEntityBase::NULL;
+  protected $record = DingEntityBase::NULL;
 
-  public $relations = DingEntityBase::NULL;
+  protected $relations = DingEntityBase::NULL;
 
-  public $localId = DingEntityBase::NULL;
+  protected $localId = DingEntityBase::NULL;
 
-  public $ownerId = DingEntityBase::NULL;
+  protected $ownerId = DingEntityBase::NULL;
 
-  public $creators = DingEntityBase::NULL;
+  protected $creators = DingEntityBase::NULL;
 
-  public $subjects = DingEntityBase::NULL;
+  protected $date = DingEntityBase::NULL;
 
-  public $language = DingEntityBase::NULL;
+  protected $subjects = DingEntityBase::NULL;
 
-  public $date = DingEntityBase::NULL;
+  protected $language = DingEntityBase::NULL;
 
-  public $onlineUrl = DingEntityBase::NULL;
+  protected $onlineUrl = DingEntityBase::NULL;
 
-  public $source = DingEntityBase::NULL;
+  protected $acSource = DingEntityBase::NULL;
 
-  public $description = DingEntityBase::NULL;
+  protected $description = DingEntityBase::NULL;
 
-  public $contributors = DingEntityBase::NULL;
+  protected $contributors = DingEntityBase::NULL;
 
-  public $isPartOf = DingEntityBase::NULL;
+  protected $isPartOf = DingEntityBase::NULL;
 
-  public $extent = DingEntityBase::NULL;
+  protected $extent = DingEntityBase::NULL;
 
-  public $classification = DingEntityBase::NULL;
+  protected $classification = DingEntityBase::NULL;
 
-  public $isbn = DingEntityBase::NULL;
+  protected $isbn = DingEntityBase::NULL;
 
-  public $descriptionSeries = DingEntityBase::NULL;
+  protected $descriptionSeries = DingEntityBase::NULL;
 
   public function getExtent() {
     $extent = $this->data->get('extent');
@@ -101,8 +101,8 @@ class TingEntity extends DingEntity {
   }
 
   function getLocalId() {
-    $id = $this->data->getId();
-    return !empty($id) ? $id : FALSE;
+    $id = explode(':', $this->data->getObjectId());
+    return $id[1];
   }
 
   function getOwnerId() {
@@ -184,11 +184,28 @@ class TingEntity extends DingEntity {
   }
 
   function getCreators() {
-    $creators = $this->data->get('creator');
-    if (!is_array($creators)) {
-      $creators = array($creators);
+    $creators = array();
+
+    // Get dc:creator.
+    $_creators = $this->data->get('creator');
+    if (!empty($_creators) && !is_array($_creators)) {
+      $_creators = array($_creators);
     }
+
+    // Get dc:creator oss:aut.
+    if (empty($_creators)) {
+      $_creators = $this->data->get('creator_aut');
+
+      if (!empty($_creators) && !is_array($_creators)) {
+        $_creators = array($_creators);
+      }
+    }
+
     return $creators;
+  }
+
+  public function getCreatorMus() {
+    return $this->data->get('creator_mus');
   }
 
   function getSubjects() {
@@ -200,11 +217,17 @@ class TingEntity extends DingEntity {
   }
 
   function getLanguage() {
-    return !empty($this->reply->record['dc:language'][''][0]) ? $this->reply->record['dc:language'][''][0] : FALSE;
+    $language = $this->data->get('language');
+    return !empty($language) ? $language : FALSE;
   }
 
   function getDate() {
     $date = $this->data->get('date');
+    return !empty($date) ? $date : FALSE;
+  }
+
+  function getSubjectGenre() {
+    $date = $this->data->get('subject_genre');
     return !empty($date) ? $date : FALSE;
   }
 
@@ -217,11 +240,18 @@ class TingEntity extends DingEntity {
   }
 
   function getSource() {
-    return !empty($this->reply->record['ac:source'][''][0]) ? $this->reply->record['ac:source'][''][0] : FALSE;
+    $source = $this->data->get('source');
+    return !empty($source) ? $source : FALSE;
+  }
+
+  function getAcSource() {
+    $source = $this->data->get('ac_source');
+    return !empty($source) ? $source : FALSE;
   }
 
   function getDescription() {
-    return !empty($this->reply->record['dc:description'][''][0]) ? $this->reply->record['dc:description'][''][0] : FALSE;
+    $description = $this->data->get('description');
+    return !empty($description) ? $description : FALSE;
   }
 
   /**
@@ -253,8 +283,95 @@ class TingEntity extends DingEntity {
     return $this->data->get('description_series');
   }
 
+  public function getFormat() {
+    return $this->data->get('format');
+  }
+
+  public function getLanguageSpoken() {
+    return $this->data->get('language_spoken');
+  }
+
+  public function getLanguageSubtitles() {
+    return $this->data->get('language_subtitles');
+  }
+
+  public function getSpatial() {
+    return $this->data->get('spatial');
+  }
+
+  public function getHaspartTrack() {
+    return $this->data->get('haspart_track');
+  }
+
+  public function getIsreferencedby() {
+    return $this->data->get('isreferencedby');
+  }
+
+  public function getVersion() {
+    return $this->data->get('version');
+  }
+
+  public function getPublisher() {
+    return $this->data->get('publisher');
+  }
+
+  public function getRights() {
+    return $this->data->get('rights');
+  }
+
+  public function getAudience() {
+    return $this->data->get('audience');
+  }
+
+  public function getAudienceAge() {
+    return $this->data->get('audience_age');
+  }
+
+  public function getAudiencePegi() {
+    return $this->data->get('audience_pegi');
+  }
+
+  public function getAudienceMedieraad() {
+    return $this->data->get('audience_medieraad');
+  }
+
   public function get($key) {
     return $this->data->get($key);
   }
-}
 
+  public function __get($prop) {
+    if (method_exists($this, 'get' . ucfirst($prop))) {
+      kpr(ddebug_backtrace());
+      throw new Exception('Use getter methor for: ' . $prop);
+    }
+    return parent::__get($prop);
+  }
+
+  public function getFormatsAvailable() {
+    return $this->data->getFormats();
+  }
+
+  public function getIdentifier() {
+    return $this->data->get('identifier');
+  }
+
+  /**
+   * Get first non-empty value of the fields.
+   * Accepts any number of field names as parameters.
+   *
+   * @return NULL | mixed
+   */
+  public function getOneOf() {
+    $fields = func_get_args();
+    $result = NULL;
+    foreach ($fields as $field) {
+      $value = $this->get($field);
+      if (!empty($value)) {
+        $result = $value;
+        break;
+      }
+    }
+    return $result;
+  }
+
+}

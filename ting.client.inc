@@ -11,8 +11,11 @@ function ting_get_object_request($object_id) {
   $request->setRelationData('full');
 
   $result = ting_execute_cache($request);
+  $object = $result->getObject();
 
-  return $result->getObject();
+  $items = entity_load('ting_object', array(), array('ding_entity_id' => array($object->getObjectId())));
+
+  return current($items);
 }
 
 /**
@@ -41,19 +44,10 @@ function ting_get_object($object_id, $collection = FALSE) {
     ting_cache_set($object_id, NULL);
 
     if (!$object) {
-      $request = ting_get_request_factory()->getCollectionRequest();
-      $request->setObjectId($object_id);
-      if ($agency = variable_get('ting_agency', FALSE)) {
-        $request->setAgency($agency);
-      }
-
-      $profile = variable_get('ting_search_profile', '');
-      if (!empty($profile) && method_exists($request, 'setProfile')) {
-        $request->setProfile($profile);
-      }
-
-      $request->setAllObjects(false);
-      $object = ting_execute_cache($request);
+      $request = ting_get_request_factory('object');
+      $request->setId($object_id);
+      $result = ting_execute_cache($request);
+      $object = $result->getObject();
     }
   }
 
@@ -103,12 +97,11 @@ function ting_get_objects($ids) {
     $request->setQuery(join(' OR ', $query));
     // Do it in steps of 50.
     $request->setLimits($i * 50 + 1, 50);
-    $request->setAllObjects(TRUE);
 
     $result = ting_execute_cache($request);
     if ($result->count()) {
       foreach ($result as $object) {
-        $objects[$object->getId()] = $object;
+        $objects[$object->getObjectId()] = $object;
       }
     }
     $i++;
@@ -238,7 +231,7 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
   if ($search_result) {
     $ids = array();
     foreach ($search_result as $object) {
-      $ids[] = $object->getId();
+      $ids[] = $object->getObjectId();
     }
 
     if (empty($options['reply_only'])) {
@@ -268,13 +261,13 @@ function ting_execute_cache($request) {
 
   // Cache objects.
   foreach ($reply as $object) {
-    ting_cache_set($object->getId(), $object);
+    ting_cache_set($object->getObjectId(), $object);
 
     // Cache relation objects.
     $relations = $object->getRelations();
     foreach($relations as $relation) {
       if (!empty($relation['object'])) {
-        ting_cache_set($relation['object']->getId(), $relation['object']);
+        ting_cache_set($relation['object']->getObjectId(), $relation['object']);
       }
     }
 

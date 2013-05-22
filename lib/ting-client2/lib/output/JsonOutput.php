@@ -40,18 +40,26 @@ class JsonOutput implements OutputInterface {
   }
 
   public function toArray() {
+    // Namespaces to keep in key.
+    $keepNamespaces = array('ac');
+
     $return = array();
+
     foreach ($this->data as $prefix => $data) {
       if (is_array($data)) {
         foreach ($data as $row) {
+          $namespace = null;
           $itemPrefix = null;
           $value = $row['$'];
+          if (!empty($row['@']) && in_array($row['@'], $keepNamespaces)) {
+            $namespace = $row['@'] . '_';
+          }
           if (!empty($row['@type'])) {
             $itemPrefix = explode(':', $row['@type']['$']);
             $itemPrefix = array_pop($itemPrefix);
             $itemPrefix = str_replace('-', '', $itemPrefix);
           }
-          $key = $prefix . (($itemPrefix) ? '_' . $itemPrefix : null);
+          $key = $namespace . $prefix . (($itemPrefix) ? '_' . $itemPrefix : null);
           $key = strtolower($key);
           if (!empty($return[$key]) && is_array($return[$key])) {
             $return[$key][] = $value;
@@ -66,6 +74,7 @@ class JsonOutput implements OutputInterface {
         }
       }
     }
+
     return $return;
   }
 

@@ -45,7 +45,6 @@ class TingSearchRequest extends TingGenericRequest {
     $_facets = $this->getParameter('facets');
     $_facets['numberOfTerms'] = $terms;
     $this->setParameter('facets', $_facets);
-
   }
 
   public function getTermsInFacets() {
@@ -59,6 +58,14 @@ class TingSearchRequest extends TingGenericRequest {
 
   public function getRank() {
     return $this->getParameter('rank');
+  }
+
+  public function setSort($value) {
+    $this->setParameter('sort', $value);
+  }
+
+  public function getSort() {
+    return $this->getParameter('sort');
   }
 
 }

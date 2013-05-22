@@ -2,6 +2,7 @@
 class TingObject {
   protected $data = array();
   protected $relations = array();
+  protected $formats = null;
 
   public function __construct($data) {
     // Get values from collection tag, if it exists.
@@ -17,7 +18,7 @@ class TingObject {
 
     $record = $data->getValue('record')->toArray();
     $this->data = array_merge($this->data, $record);
-    $this->data['identifier'] = $data->getValue('identifier');
+    $this->data['objectId'] = $data->getValue('identifier');
 
     $relations = $data->getValue('relations/relation');
 
@@ -34,6 +35,19 @@ class TingObject {
         $this->relations[] = $relation;
       }
     }
+
+    // Get formatsAvailable from response.
+    // Must be always an array.
+    $formats = $data->getValue('formatsAvailable')->toArray();
+    if (!empty($formats['format'])) {
+      $formats = $formats['format'];
+      if (is_array($formats)) {
+        $this->formats = $formats;
+      }
+      else {
+        $this->formats = array($formats);
+      }
+    }
   }
 
   public function get($key) {
@@ -43,12 +57,16 @@ class TingObject {
     return NULL;
   }
 
-  public function getId() {
-    return $this->get('identifier');
+  public function getObjectId() {
+    return $this->get('objectId');
   }
 
   public function getRelations() {
     return $this->relations;
+  }
+
+  public function getFormats() {
+    return $this->formats;
   }
 
 }

@@ -461,7 +461,7 @@ function ting_ding_entity_is($object, $class) {
     // @todo make this configurable.
     // @todo also make sure that availability information isn't displayed
     //   on the object
-    return in_array(drupal_strtolower($object->type), array('tidsskrift', 'periodikum', 'årbog'));
+    return in_array(drupal_strtolower($object->getType()), array('tidsskrift', 'periodikum', 'årbog'));
   }
 }
 
@@ -508,7 +508,7 @@ function ting_page_title($object) {
  */
 function ting_ting_object_load($objects) {
   foreach ($objects as $object) {
-    $object->provider_id = $object->localId;
+    $object->provider_id = $object->getId();
   }
 }
 
