@@ -46,6 +46,11 @@ class TingGenericRequest implements TingRequestInterface {
   public function getParameter($name) {
     return isset($this->parameters[$name]) ? $this->parameters[$name] : NULL;
   }
+  public function unsetParameter($name) {
+    if (isset($this->parameters[$name])) {
+      unset($this->parameters[$name]);
+    }
+  }
   public function getResultClass() {
     return $this->resultClass;
   }
