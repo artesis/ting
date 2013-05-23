@@ -512,7 +512,7 @@ function ting_page_title($object) {
  * Callback for entity_uri(). Returns the uri for the object.
  */
 function ting_object_uri($collection) {
-  return array('path' => 'search/ting/' . $collection->localId, 'options' => array('query' => array('permalink' => 1)));
+  return array('path' => 'search/ting/' . $collection->getLocalId(), 'options' => array());
 }
 
 /**
