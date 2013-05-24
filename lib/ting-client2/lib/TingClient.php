@@ -41,19 +41,23 @@ class TingClient {
             ' Response: ' . $response
         );
 
-        if (empty($parameters['outputType']) || $parameters['outputType'] == 'xml') {
-          $result = simplexml_load_string($response);
-        }
-        else {
-          switch ($parameters['outputType']) {
-            case 'json' :
-              $result = new JsonOutput($response);
-              break;
-            case 'php' :
-              $result = unserialize($response);
+        if ($request->processResults()) {
+          if (empty($parameters['outputType']) || $parameters['outputType'] == 'xml') {
+            $result = simplexml_load_string($response);
           }
+          else {
+            switch ($parameters['outputType']) {
+              case 'json' :
+                $result = new JsonOutput($response);
+                break;
+              case 'php' :
+                $result = unserialize($response);
+            }
+          }
+          return $result;
         }
-        return $result;
+
+        return $response;
       }
       catch (NanoSOAPcURLException $e) {
         //Convert NanoSOAP exceptions to TingClientExceptions as callers

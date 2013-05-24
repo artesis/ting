@@ -18,4 +18,8 @@ class TingObjectRequest extends TingGenericRequest {
     $this->setParameter('relationData', $value);
   }
 
+  public function setObjectFormat($format) {
+    $this->setParameter('objectFormat', $format);
+  }
+
 }

@@ -51,6 +51,12 @@ class TingSearchResult implements Iterator, Countable {
    * Build items from raw data (json).
    */
   protected function process() {
+    // Check for errors.
+    $error = $this->result->getValue('searchResponse/error');
+    if (!empty($error)) {
+      throw new TingClientException($error);
+    }
+
     $data = $this->result->getValue('searchResponse/result');
 
     $this->hitCount = $data->getValue('hitCount');
@@ -71,10 +77,12 @@ class TingSearchResult implements Iterator, Countable {
         $facetObject->name = $facet->getValue('facetName');
         $terms = $facet->getValue('facetTerm');
 
-        foreach ($terms as $term) {
-          $value = $term->getValue('frequence');
-          $key = $term->getValue('term');
-          $facetObject->terms[$key] = $value;
+        if (!empty($terms)) {
+          foreach ($terms as $term) {
+            $value = $term->getValue('frequence');
+            $key = $term->getValue('term');
+            $facetObject->terms[$key] = $value;
+          }
         }
 
         $this->facets[$facetObject->name] = $facetObject;

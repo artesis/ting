@@ -8,4 +8,9 @@ interface TingRequestInterface {
   public function getParameters();
   public function getResultClass();
   public function setResultClass($class);
+
+  /**
+   * Tell if result must be processed by OutputInterface.
+   */
+  public function processResults();
 }
