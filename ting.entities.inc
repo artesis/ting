@@ -273,7 +273,7 @@ class TingEntity extends DingEntity {
 
     // Get ISBN numbers.
     foreach ($isbn as $k => $number) {
-      $isbn[$k] = str_replace(array(' ','-'), '', $number);
+      $isbn[$k] = str_replace(array(' ', '-'), '', $number);
     }
     rsort($isbn);
     return $isbn;
