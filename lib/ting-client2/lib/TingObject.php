@@ -11,12 +11,22 @@ class TingObject {
       $data = $_data;
     }
 
-    $data = $data->getValue('object');
-    if (is_array($data)) {
-      $data = $data[0];
+    $_data = $data->getValue('object');
+    if (!empty($_data) && is_array($_data)) {
+      $data = $_data[0];
+    }
+    elseif (!empty($_data) && is_a($_data, 'JsonOutput')) {
+      $data = $_data;
     }
 
-    $record = $data->getValue('record')->toArray();
+    $record = $data->getValue('record');
+
+    if (is_a($record, 'JsonOutput')) {
+      $record = $record->toArray();
+    } else {
+      throw new TingClientException('Could not get record');
+    }
+
     $this->data = array_merge($this->data, $record);
     $this->data['objectId'] = $data->getValue('identifier');
 
@@ -67,6 +77,11 @@ class TingObject {
 
   public function getFormats() {
     return $this->formats;
+  }
+
+  public function getLocalId() {
+    $localId = explode(':', $this->getObjectId());
+    return $localId[1];
   }
 
 }
