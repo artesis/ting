@@ -420,7 +420,8 @@ function ting_get_request_factory($type) {
     'object' => 'ting_search_url',
     'collection' => 'ting_search_url',
     'spell' => 'ting_spell_url',
-    'recommendation' => 'ting_recommendation_url'
+    'recommendation' => 'ting_recommendation_url',
+    'relatedObjects' => 'ting_search_url',
   );
 
   // TODO: This should probably be rethought.
