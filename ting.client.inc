@@ -225,6 +225,10 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
     ));
   }
 
+  if (!empty($options['skip_relations'])) {
+    $request->skipRelations();
+  }
+
   $search_result = ting_execute_cache($request);
 
   // Replace collections with proper TingCollection objects.
@@ -265,7 +269,7 @@ function ting_execute_cache($request) {
 
     // Cache relation objects.
     $relations = $object->getRelations();
-    foreach($relations as $relation) {
+    foreach ($relations as $relation) {
       if (!empty($relation['object'])) {
         ting_cache_set($relation['object']->getObjectId(), $relation['object']);
       }
@@ -345,7 +349,8 @@ function ting_cache_get($id, $collection = FALSE) {
       return $cache->data;
     }
     return NULL;
-  } else {
+  }
+  else {
     // Without proper caching, use a request cache.
     $cache = &drupal_static('ting_cache_set');
     if (!isset($cache)) {
@@ -368,7 +373,8 @@ function ting_cache_set($id, $value) {
 
   if ($ttl) {
     $cache = cache_set($cid, $value, 'cache', REQUEST_TIME + $ttl);
-  } else {
+  }
+  else {
     // Without proper caching, use a request cache.
     $cache = &drupal_static(__FUNCTION__);
     if (!isset($cache)) {
@@ -388,7 +394,7 @@ function ting_cache_set($id, $value) {
  * @return array
  *  An array of TingClientObjectRecommendation objects.
  */
-function ting_get_object_recommendations($isbn, $numResults = 10) {
+function ting_get_object_recommendations($isbn, $num_results = 10) {
   $recommendation_url = ting_get_request_factory()->getRequestUrl('recommendation');
 
   if (empty($recommendation_url)) {
@@ -397,7 +403,7 @@ function ting_get_object_recommendations($isbn, $numResults = 10) {
 
   $request = ting_get_request_factory()->getObjectRecommendationRequest();
   $request->setIsbn($isbn);
-  $request->setNumResults($numResults);
+  $request->setNumResults($num_results);
   return ting_execute($request);
 }
 
@@ -425,15 +431,15 @@ function ting_get_request_factory($type) {
 
   // Classname for request object.
   // ex: TingSearchRequest, TingObjectRequest, TingScanRequest, etc.
-  $className = 'Ting' . ucfirst($type) . 'Request';
+  $class_name = 'Ting' . ucfirst($type) . 'Request';
 
-  if (class_exists($className)) {
+  if (class_exists($class_name)) {
     // Get settings from drupal.
     $url = variable_get($url_variables[$type], FALSE);
     $agency = variable_get('ting_agency', FALSE);
     $profile = variable_get('ting_search_profile', '');
 
-    $request = new $className($url, $agency, $profile);
+    $request = new $class_name($url, $agency, $profile);
     return $request;
   }
   // TODO: Throw an error if class does not exist.

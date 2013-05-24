@@ -24,7 +24,7 @@ class JsonOutput implements OutputInterface {
       $result = $result[$k];
     }
 
-    if (!empty($result['$'])) {
+    if (isset($result['$'])) {
       return $result['$'];
     }
 

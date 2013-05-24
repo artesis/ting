@@ -13,6 +13,11 @@ class TingSearchRequest extends TingGenericRequest {
     $this->setParameter('relationData', 'full');
   }
 
+  public function skipRelations() {
+    $this->unsetParameter('allRelations');
+    $this->unsetParameter('relationData');
+  }
+
   public function setLimits($start, $perPage) {
     $this->setParameter('start', $start);
     $this->setParameter('stepValue', $perPage);
