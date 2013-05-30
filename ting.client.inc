@@ -263,6 +263,11 @@ function ting_execute_cache($request) {
   $calls[] = $request->getParameters();
   $reply = ting_execute($request);
 
+  // Nothing to do.
+  if (empty($reply)) {
+    return;
+  }
+
   // Cache objects.
   foreach ($reply as $object) {
     ting_cache_set($object->getObjectId(), $object);
