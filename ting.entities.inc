@@ -77,8 +77,7 @@ class TingEntity extends DingEntity {
   protected $descriptionSeries = DingEntityBase::NULL;
 
   public function getExtent() {
-    $extent = $this->data->get('extent');
-    return !empty($extent) ? $extent : FALSE;
+    return $this->data->get('extent', FALSE);
   }
 
   function getClassification() {
@@ -90,8 +89,7 @@ class TingEntity extends DingEntity {
   }
 
   function getIsPartOf() {
-    $isPartOf = $this->data->get('ispartof');
-    return !empty($isPartOf) ? $isPartOf : FALSE;
+    return $this->data->get('ispartof', FALSE);
   }
 
   // pjo 26-09-11 ; getmethod contributor
@@ -106,13 +104,11 @@ class TingEntity extends DingEntity {
   }
 
   function getOwnerId() {
-    $owner = $this->data->get('ownerid');
-    return !empty($owner) ? $owner : FALSE;
+    return $this->data->get('ownerid', FALSE);
   }
 
   function getType() {
-    $type = $this->data->get('type_bibdktype');
-    return !empty($type) ? $type : FALSE;
+    return $this->data->get('type_bibdktype', FALSE);
   }
 
   function getTitle() {
@@ -130,9 +126,7 @@ class TingEntity extends DingEntity {
   }
 
   function getYear() {
-    $year = $this->data->get('date');
-
-    return !empty($year) ? $year : FALSE;
+    return $this->data->get('date', FALSE);
   }
 
   function getSerieNumber() {
@@ -159,8 +153,7 @@ class TingEntity extends DingEntity {
   }
 
   function getAbstract() {
-    $abstract = $this->data->get('abstract');
-    return !empty($abstract) ? $abstract : FALSE;
+    return $this->data->get('abstract', FALSE);
   }
 
   function getRelations() {
@@ -223,18 +216,15 @@ class TingEntity extends DingEntity {
   }
 
   function getLanguage() {
-    $language = $this->data->get('language');
-    return !empty($language) ? $language : FALSE;
+    return $this->data->get('language', FALSE);
   }
 
   function getDate() {
-    $date = $this->data->get('date');
-    return !empty($date) ? $date : FALSE;
+    return $this->data->get('date', FALSE);
   }
 
   function getSubjectGenre() {
-    $date = $this->data->get('subject_genre');
-    return !empty($date) ? $date : FALSE;
+    return $this->data->get('subject_genre', FALSE);
   }
 
   function getOnlineUrl() {
@@ -246,18 +236,15 @@ class TingEntity extends DingEntity {
   }
 
   function getSource() {
-    $source = $this->data->get('source');
-    return !empty($source) ? $source : FALSE;
+    return $this->data->get('source', FALSE);
   }
 
   function getAcSource() {
-    $source = $this->data->get('ac_source');
-    return !empty($source) ? $source : FALSE;
+    return $this->data->get('ac_source', FALSE);
   }
 
   function getDescription() {
-    $description = $this->data->get('description');
-    return !empty($description) ? $description : FALSE;
+    return $this->data->get('description', FALSE);
   }
 
   /**
@@ -351,8 +338,9 @@ class TingEntity extends DingEntity {
         kpr(ddebug_backtrace());
       }
 
-      watchdog('ting', t('Use getter methor for: @prop'), array('@prop' => $prop), WATCHDOG_CRITICAL);
-      throw new Exception('Use getter methor for: ' . $prop);
+      $exception = new Exception(sprintf('Use getter methor for: %s', $prop));
+      watchdog_exception('ting', $exception, NULL, array(), WATCHDOG_CRITICAL);
+      throw $exception;
     }
     return parent::__get($prop);
   }

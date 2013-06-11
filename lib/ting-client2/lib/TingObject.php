@@ -60,11 +60,14 @@ class TingObject {
     }
   }
 
-  public function get($key) {
+  public function get($key, $default_value = NULL) {
     if (isset($this->data[$key])) {
+      if (empty($this->data[$key]) && $default_value !== NULL) {
+        return $default_value;
+      }
       return $this->data[$key];
     }
-    return NULL;
+    return $default_value;
   }
 
   public function getObjectId() {
