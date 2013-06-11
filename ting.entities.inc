@@ -91,7 +91,7 @@ class TingEntity extends DingEntity {
 
   function getIsPartOf() {
     $isPartOf = $this->data->get('ispartof');
-    return $isPartOf;
+    return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
   // pjo 26-09-11 ; getmethod contributor
@@ -127,6 +127,12 @@ class TingEntity extends DingEntity {
       $title = $title1;
     }
     return $title;
+  }
+
+  function getYear() {
+    $year = $this->data->get('date');
+
+    return !empty($year) ? $year : FALSE;
   }
 
   function getSerieNumber() {
