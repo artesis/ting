@@ -462,25 +462,11 @@ function ting_add_relations($request, $type = 'full') {
  *   Result of the request or false if an error occurs.
  */
 function ting_execute($request) {
-  // Get additional parameters from other modules.
-  $params = module_invoke_all('ting_pre_execute', $request);
-  if (!empty($params)) {
-    $request->setParameters($params);
-  }
 
   try {
     timer_start('ting');
     $response = ting_get_client()->execute($request);
     timer_stop('ting');
-
-    // Pass parsed results to other modules.
-    // @todo Check if it works for collection of items.
-    $props = module_invoke_all('ting_post_execute', $request, $response);
-    if (!empty($props)) {
-      foreach ($props as $property => $value) {
-        $response->{$property} = $value;
-      }
-    }
 
     return $response;
   }

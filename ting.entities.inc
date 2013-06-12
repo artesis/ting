@@ -89,6 +89,30 @@ class TingEntity extends DingEntity {
     return $dk5;
   }
 
+  function getSubjectDK5Text() {
+    $result = array();
+    $dk5 = $this->data->get('subject_dk5text');
+    if (!empty($dk5)) {
+      if (!is_array($dk5)) {
+        $dk5 = array($dk5);
+      }
+      $result = $dk5;
+    }
+    return $result;
+  }
+
+  function getSubjectDBCS() {
+    $result = array();
+    $subjects = $this->data->get('subject_dbcs');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
+      }
+      $result = $subjects;
+    }
+    return $result;
+  }
+
   function getIsPartOf() {
     $isPartOf = $this->data->get('ispartof');
     return $isPartOf;
@@ -221,6 +245,11 @@ class TingEntity extends DingEntity {
     return !empty($language) ? $language : FALSE;
   }
 
+  function getLanguageIso() {
+    $language = $this->data->get('language_iso639_2');
+    return !empty($language) ? $language : FALSE;
+  }
+
   function getDate() {
     $date = $this->data->get('date');
     return !empty($date) ? $date : FALSE;
@@ -277,6 +306,10 @@ class TingEntity extends DingEntity {
     }
     rsort($isbn);
     return $isbn;
+  }
+
+  function getIssn() {
+    return $this->data->get('identifier_issn');
   }
 
   public function getDescriptionSeries() {
@@ -353,6 +386,10 @@ class TingEntity extends DingEntity {
 
   public function getIdentifier() {
     return $this->data->get('identifier');
+  }
+
+  public function getIdentifierUri() {
+    return $this->data->get('identifier_uri');
   }
 
   /**

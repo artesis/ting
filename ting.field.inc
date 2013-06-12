@@ -345,8 +345,8 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           '#theme' => 'item_list',
           '#items' => array(
             array(
-              'data' => $entity->type,
-              'class' => array(drupal_html_class($entity->type)),
+              'data' => $entity->getType(),
+              'class' => array(drupal_html_class($entity->getType())),
             ),
           ),
         );
@@ -360,7 +360,11 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
         if ($entity->getSerieTitle()) {
           $element[$delta] = array(
             // should use phrase.title instead of dc.title but at the moment opensearch does not support the use of phrase.title
-            '#markup' => l(check_plain($entity->getSerieTitle()), 'search/ting/' . variable_get('ting_admin_register_serie_title', 'dc.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"', array('attributes' => array('class' => array('series')))) . ' : ' . check_plain($entity->getSerieNumber()),
+            '#markup' => l(
+              check_plain($entity->getSerieTitle()),
+              'search/ting/' . variable_get('ting_admin_register_serie_title', 'dc.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"',
+              array('attributes' => array('class' => array('series')))
+            ) . ' : ' . check_plain($entity->getSerieNumber()),
           );
         }
         break;
