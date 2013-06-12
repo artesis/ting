@@ -91,7 +91,7 @@ class TingEntity extends DingEntity {
 
   function getIsPartOf() {
     $isPartOf = $this->data->get('ispartof');
-    return $isPartOf;
+    return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
   // pjo 26-09-11 ; getmethod contributor
@@ -127,6 +127,12 @@ class TingEntity extends DingEntity {
       $title = $title1;
     }
     return $title;
+  }
+
+  function getYear() {
+    $year = $this->data->get('date');
+
+    return !empty($year) ? $year : FALSE;
   }
 
   function getSerieNumber() {
@@ -341,7 +347,11 @@ class TingEntity extends DingEntity {
 
   public function __get($prop) {
     if (method_exists($this, 'get' . ucfirst($prop))) {
-      kpr(ddebug_backtrace());
+      if (module_exists('devel')) {
+        kpr(ddebug_backtrace());
+      }
+
+      watchdog('ting', t('Use getter methor for: @prop'), array('@prop' => $prop), WATCHDOG_CRITICAL);
       throw new Exception('Use getter methor for: ' . $prop);
     }
     return parent::__get($prop);
