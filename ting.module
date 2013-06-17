@@ -451,7 +451,7 @@ function ting_ding_entity_is($object, $class) {
   if ($class == 'reservable' || $class == 'cartable') {
     $sources = variable_get('ting_reservable_sources', _ting_default_reservable_sources());
     $types = variable_get('ting_reservable_types', _ting_default_reservable_types());
-    if (in_array(drupal_strtolower($object->ac_source), $sources) && in_array(drupal_strtolower($object->type), $types)) {
+    if (in_array(drupal_strtolower($object->getAcSource()), $sources) && in_array(drupal_strtolower($object->getType()), $types)) {
       return TRUE;
     }
     else {
@@ -462,7 +462,16 @@ function ting_ding_entity_is($object, $class) {
     // @todo make this configurable.
     // @todo also make sure that availability information isn't displayed
     //   on the object
-    return in_array(drupal_strtolower($object->getType()), array('tidsskrift', 'periodikum', 'årbog'));
+    $type = $object->getType();
+    if (is_array($type)) {
+      $type = array_map('drupal_strtolower', $type);
+    }
+    else {
+      $type = array(drupal_strtolower($type));
+    }
+    $result = array_intersect($type, array('tidsskrift', 'periodikum', 'årbog'));
+
+    return count($result) > 0;
   }
 }
 

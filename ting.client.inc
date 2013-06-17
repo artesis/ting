@@ -263,6 +263,10 @@ function ting_execute_cache($request) {
   $calls[] = $request->getParameters();
   $reply = ting_execute($request);
 
+  if (empty($reply)) {
+    return $reply;
+  }
+
   // Cache objects.
   foreach ($reply as $object) {
     ting_cache_set($object->getObjectId(), $object);
@@ -414,20 +418,24 @@ function ting_get_object_recommendations($isbn, $num_results = 10) {
  */
 function ting_get_request_factory($type) {
   // Type => URL setting.
-  $url_variables = array(
-    'search' => 'ting_search_url',
-    'scan' => 'ting_scan_url',
-    'object' => 'ting_search_url',
-    'collection' => 'ting_search_url',
-    'spell' => 'ting_spell_url',
-    'recommendation' => 'ting_recommendation_url',
-    'relatedObjects' => 'ting_search_url',
-  );
+  $url_variables = &drupal_static(__FUNCTION__);
 
-  // TODO: This should probably be rethought.
-  $infomedia_url = variable_get('ting_infomedia_url', FALSE);
-  if (module_exists('ting_infomedia') && !empty($infomedia_url)) {
-    $url_variables['infomedia'] = 'ting_infomedia_url';
+  if (empty($url_variables)) {
+    $url_variables = array(
+      'search' => 'ting_search_url',
+      'scan' => 'ting_scan_url',
+      'object' => 'ting_search_url',
+      'collection' => 'ting_search_url',
+      'spell' => 'ting_spell_url',
+      'recommendation' => 'ting_recommendation_url',
+      'relatedObjects' => 'ting_search_url',
+    );
+
+    // Add more urls from other modules.
+    $additional_urls = module_invoke_all('ting_request_factory');
+    if (!empty($additional_urls)) {
+      $url_variables = array_merge($url_variables, $additional_urls);
+    }
   }
 
   // Classname for request object.
@@ -444,6 +452,7 @@ function ting_get_request_factory($type) {
     return $request;
   }
   // TODO: Throw an error if class does not exist.
+  return NULL;
 }
 
 function ting_add_relations($request, $type = 'full') {
@@ -462,25 +471,11 @@ function ting_add_relations($request, $type = 'full') {
  *   Result of the request or false if an error occurs.
  */
 function ting_execute($request) {
-  // Get additional parameters from other modules.
-  $params = module_invoke_all('ting_pre_execute', $request);
-  if (!empty($params)) {
-    $request->setParameters($params);
-  }
 
   try {
     timer_start('ting');
     $response = ting_get_client()->execute($request);
     timer_stop('ting');
-
-    // Pass parsed results to other modules.
-    // @todo Check if it works for collection of items.
-    $props = module_invoke_all('ting_post_execute', $request, $response);
-    if (!empty($props)) {
-      foreach ($props as $property => $value) {
-        $response->{$property} = $value;
-      }
-    }
 
     return $response;
   }
@@ -521,17 +516,14 @@ function ting_get_client() {
  * @return TingClientScanResult
  */
 function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
-  $scan_url = ting_get_request_factory()->getRequestUrl('scan');
-
-  if (empty($scan_url)) {
-    return FALSE;
+  $request = ting_get_request_factory('scan');
+  if (!$request) {
+    return NULL;
   }
 
-  $request = ting_get_request_factory()->getScanRequest();
   $request->setField('phrase.' . $phrase);
   $request->setLower($query);
-  $request = ting_add_agency($request);
-  $request->setNumResults($num_results);
+  $request->setLimit($num_results);
 
   return ting_execute($request);
 }
@@ -541,7 +533,8 @@ function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
  * @return TingClientScanRequest
  */
 function ting_add_agency(TingClientScanRequest $request) {
-  if ($agency = variable_get('ting_agency', FALSE)) {
+  $agency = variable_get('ting_agency', FALSE);
+  if ($agency) {
     $request->setAgency($agency);
   }
   return $request;
@@ -553,15 +546,14 @@ function ting_add_agency(TingClientScanRequest $request) {
  * @return array An array of TingClientSpellSuggestion objects
  */
 function ting_get_spell_suggestions($word, $num_results = 10) {
-  $spell_url = ting_get_request_factory()->getRequestUrl('spell');
+  $request = ting_get_request_factory('spell');
 
-  if (empty($spell_url)) {
+  if (empty($request)) {
     return FALSE;
   }
 
-  $request = ting_get_request_factory()->getSpellRequest();
   $request->setWord($word);
-  $request->setNumResults($num_results);
+  $request->setLimit($num_results);
   return ting_execute($request);
 }
 
