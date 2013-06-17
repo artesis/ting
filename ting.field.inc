@@ -375,12 +375,15 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
         break;
       case 'ting_author_default':
         $creators = array();
-        foreach ($entity->getCreators() as $creator) {
-          $creators[] = l(
-            $creator,
-            'search/ting/dc.creator="' . $creator . '"',
-            array('attributes' => array('class' => array('author')))
-          );
+        $_creators = $entity->getCreators();
+        if (!empty($_creators)) {
+          foreach ($_creators as $creator) {
+            $creators[] = l(
+              $creator,
+              'search/ting/dc.creator="' . $creator . '"',
+              array('attributes' => array('class' => array('author')))
+            );
+          }
         }
         $element[$delta] = array(
           '#markup' => implode(', ', $creators),

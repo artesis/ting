@@ -13,10 +13,15 @@ class JsonOutput implements OutputInterface {
     }
   }
 
-  public function getValue($key, $debug = false) {
-    $key = explode('/', $key);
+  public function getValue($key = NULL) {
     $result = $this->data;
+    $_key = $key;
+    $key = explode('/', $key);
     foreach ($key as $k) {
+      if ($k == NULL) {
+        $key = $_key;
+        break;
+      }
       if (empty($result[$k])) {
         // Cannot find required data.
         return null;
@@ -26,6 +31,10 @@ class JsonOutput implements OutputInterface {
 
     if (isset($result['$'])) {
       return $result['$'];
+    }
+
+    if ($_key == NULL) {
+      return NULL;
     }
 
     if (!empty($result[0])) {

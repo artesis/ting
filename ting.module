@@ -462,7 +462,16 @@ function ting_ding_entity_is($object, $class) {
     // @todo make this configurable.
     // @todo also make sure that availability information isn't displayed
     //   on the object
-    return in_array(drupal_strtolower($object->getType()), array('tidsskrift', 'periodikum', 'årbog'));
+    $type = $object->getType();
+    if (is_array($type)) {
+      $type = array_map('drupal_strtolower', $type);
+    }
+    else {
+      $type = array(drupal_strtolower($type));
+    }
+    $result = array_intersect($type, array('tidsskrift', 'periodikum', 'årbog'));
+
+    return count($result) > 0;
   }
 }
 
@@ -505,7 +514,7 @@ function ting_collection_page_view($object) {
  * Page title callback.
  */
 function ting_page_title($object) {
-  return htmlspecialchars($object->title, ENT_NOQUOTES, 'UTF-8');
+  return htmlspecialchars($object->getTitle(), ENT_NOQUOTES, 'UTF-8');
 }
 
 /**

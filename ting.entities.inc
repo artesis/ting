@@ -47,12 +47,15 @@ class TingEntity extends DingEntity {
   protected $relations = DingEntityBase::NULL;
 
   protected $localId = DingEntityBase::NULL;
+  protected $_localId;
 
   protected $ownerId = DingEntityBase::NULL;
 
   protected $creators = DingEntityBase::NULL;
+  protected $_creators = array();
 
   protected $date = DingEntityBase::NULL;
+  protected $_date;
 
   protected $subjects = DingEntityBase::NULL;
 
@@ -76,12 +79,14 @@ class TingEntity extends DingEntity {
 
   protected $descriptionSeries = DingEntityBase::NULL;
 
+  protected $image = array();
+
   public function getExtent() {
     $extent = $this->data->get('extent');
     return !empty($extent) ? $extent : FALSE;
   }
 
-  function getClassification() {
+  public function getClassification() {
     $dk5 = $this->data->get('subject_dk5');
     if ($dk5 == 'sk') {
       $dk5 = '';
@@ -89,7 +94,7 @@ class TingEntity extends DingEntity {
     return $dk5;
   }
 
-  function getSubjectDK5Text() {
+  public function getSubjectDK5Text() {
     $result = array();
     $dk5 = $this->data->get('subject_dk5text');
     if (!empty($dk5)) {
@@ -101,7 +106,7 @@ class TingEntity extends DingEntity {
     return $result;
   }
 
-  function getSubjectDBCS() {
+  public function getSubjectDBCS() {
     $result = array();
     $subjects = $this->data->get('subject_dbcs');
     if (!empty($subjects)) {
@@ -113,47 +118,63 @@ class TingEntity extends DingEntity {
     return $result;
   }
 
-  function getIsPartOf() {
+  public function getIsPartOf() {
     $isPartOf = $this->data->get('ispartof');
     return $isPartOf;
   }
 
   // pjo 26-09-11 ; getmethod contributor
-  function getContributors() {
+  public function getContributors() {
     $contributors = $this->data->get('contributor');
     return $contributors;
   }
 
-  function getLocalId() {
-    $id = explode(':', $this->data->getObjectId());
-    return $id[1];
+  public function getLocalId() {
+    if (empty($this->_localId)) {
+      $id = explode(':', $this->data->getObjectId());
+      $this->_localId = $id[1];
+    }
+    return $this->_localId;
   }
 
-  function getOwnerId() {
+  public function setLocalId($id) {
+    $this->_localId = $id;
+  }
+
+  public function setDingEntityId($id) {
+    $this->ding_entity_id = $id;
+  }
+
+  public function getOwnerId() {
     $owner = $this->data->get('ownerid');
     return !empty($owner) ? $owner : FALSE;
   }
 
-  function getType() {
-    $type = $this->data->get('type_bibdktype');
-    return !empty($type) ? $type : FALSE;
+  public function getType() {
+    if (empty($this->_type)) {
+      $this->_type = $this->data->get('type_bibdktype');
+    }
+
+    return $this->_type;
   }
 
-  function getTitle() {
-    $title = FALSE;
-    $title1 = $this->data->get('title');
-    $title2 = $this->data->get('title_full');
-
-    if (!empty($title2)) {
-      $title = $title2;
-    }
-    elseif (!empty($title1)) {
-      $title = $title1;
-    }
-    return $title;
+  public function setType($type) {
+    $this->_type = $type;
   }
 
-  function getSerieNumber() {
+  public function getTitle() {
+    if (empty($this->_title)) {
+      $title = $this->getOneOf('title_full', 'title');
+      $this->_title = $title;
+    }
+    return $this->_title;
+  }
+
+  public function setTitle($title) {
+    $this->_title = $title;
+  }
+
+  public function getSerieNumber() {
     $serie = $this->splitSerie();
     // Last part is the number.
     if (empty($serie[1])) {
@@ -167,7 +188,7 @@ class TingEntity extends DingEntity {
     return explode(';', $serie);
   }
 
-  function getSerieTitle() {
+  public function getSerieTitle() {
     $serie = $this->splitSerie();
     // First part is the title.
     if (empty($serie[0])) {
@@ -176,12 +197,12 @@ class TingEntity extends DingEntity {
     return trim($serie[0]);
   }
 
-  function getAbstract() {
+  public function getAbstract() {
     $abstract = $this->data->get('abstract');
     return !empty($abstract) ? $abstract : FALSE;
   }
 
-  function getRelations() {
+  public function getRelations() {
     $relations = $this->data->getRelations();
 
     $this->relations = array();
@@ -207,32 +228,30 @@ class TingEntity extends DingEntity {
     return $this->relations;
   }
 
-  function getCreators() {
-    $creators = array();
-
-    // Get dc:creator.
-    $_creators = $this->data->get('creator');
-    if (!empty($_creators) && !is_array($_creators)) {
-      $_creators = array($_creators);
-    }
-
-    // Get dc:creator oss:aut.
-    if (empty($_creators)) {
-      $_creators = $this->data->get('creator_aut');
-
-      if (!empty($_creators) && !is_array($_creators)) {
-        $_creators = array($_creators);
+  public function getCreators() {
+    if (empty($this->_creators)) {
+      $creators = $this->getOneOf('creator', 'creator_aut');
+      if (empty($creators)) {
+        $this->_creators = array();
       }
+      elseif (!empty($creators) && !is_array($creators)) {
+        $creators = array($creators);
+      }
+      $this->_creators = $creators;
     }
 
-    return $creators;
+    return $this->_creators;
+  }
+
+  public function setCreators(array $creators) {
+    $this->_creators = $creators;
   }
 
   public function getCreatorMus() {
     return $this->data->get('creator_mus');
   }
 
-  function getSubjects() {
+  public function getSubjects() {
     $subjects = $this->data->get('subject');
     if (!empty($subjects) && !is_array($subjects)) {
       $subjects = array($subjects);
@@ -240,27 +259,33 @@ class TingEntity extends DingEntity {
     return $subjects;
   }
 
-  function getLanguage() {
+  public function getLanguage() {
     $language = $this->data->get('language');
     return !empty($language) ? $language : FALSE;
   }
 
-  function getLanguageIso() {
+  public function getLanguageIso() {
     $language = $this->data->get('language_iso639_2');
     return !empty($language) ? $language : FALSE;
   }
 
-  function getDate() {
-    $date = $this->data->get('date');
-    return !empty($date) ? $date : FALSE;
+  public function getDate() {
+    if (empty($this->_date)) {
+      $this->_date = $this->data->get('date');
+    }
+    return $this->_date;
   }
 
-  function getSubjectGenre() {
+  public function setDate($date) {
+    $this->_date = $date;
+  }
+
+  public function getSubjectGenre() {
     $date = $this->data->get('subject_genre');
     return !empty($date) ? $date : FALSE;
   }
 
-  function getOnlineUrl() {
+  public function getOnlineUrl() {
     $url = $this->data->get('identifier_uri');
     if (!empty($url)) {
       drupal_alter('ting_online_url', $url, $this);
@@ -268,17 +293,17 @@ class TingEntity extends DingEntity {
     }
   }
 
-  function getSource() {
+  public function getSource() {
     $source = $this->data->get('source');
     return !empty($source) ? $source : FALSE;
   }
 
-  function getAcSource() {
+  public function getAcSource() {
     $source = $this->data->get('ac_source');
     return !empty($source) ? $source : FALSE;
   }
 
-  function getDescription() {
+  public function getDescription() {
     $description = $this->data->get('description');
     return !empty($description) ? $description : FALSE;
   }
@@ -288,7 +313,7 @@ class TingEntity extends DingEntity {
    *
    * @return array
    */
-  function getIsbn() {
+  public function getIsbn() {
     $isbn = $this->data->get('identifier_isbn');
 
     // Nothing to do.
@@ -308,7 +333,7 @@ class TingEntity extends DingEntity {
     return $isbn;
   }
 
-  function getIssn() {
+  public function getIssn() {
     return $this->data->get('identifier_issn');
   }
 
@@ -374,7 +399,11 @@ class TingEntity extends DingEntity {
 
   public function __get($prop) {
     if (method_exists($this, 'get' . ucfirst($prop))) {
-      kpr(ddebug_backtrace());
+      $i = 0;
+      foreach (debug_backtrace() as $bt) {
+        echo '#' . ($i++) . $bt['file'] . ' at line ' . $bt['line'] . '<br />';
+        kpr($bt);
+      }
       throw new Exception('Use getter methor for: ' . $prop);
     }
     return parent::__get($prop);
@@ -390,6 +419,25 @@ class TingEntity extends DingEntity {
 
   public function getIdentifierUri() {
     return $this->data->get('identifier_uri');
+  }
+
+  /**
+   * Set cover image path.
+   *
+   * @param string $img
+   *   Image path.
+   * @param string $style
+   *   Image style.
+   */
+  public function setImage($img, $style = '-none-') {
+    $this->image[$style] = $img;
+  }
+
+  public function getImage($style = '-none-') {
+    if (empty($this->image[$style])) {
+      return NULL;
+    }
+    return $this->image[$style];
   }
 
   /**
