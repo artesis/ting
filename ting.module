@@ -434,12 +434,12 @@ function ting_registry_files_alter(&$files, $modules) {
   );
 
   // Add all of the Ting client library to the registry.
-  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client2/lib', '/\.php$/') as $filename => $dummy) {
+  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client/lib', '/\.php$/') as $filename => $dummy) {
     $files[$filename] = $def;
   }
 
   // And the Ting client unit tests as well.
-  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client2/tests', '/\.test$/') as $filename => $dummy) {
+  foreach (file_scan_directory(drupal_get_path('module', 'ting') . '/lib/ting-client/tests', '/\.test$/') as $filename => $dummy) {
     $files[$filename] = $def;
   }
 }
