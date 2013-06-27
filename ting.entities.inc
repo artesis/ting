@@ -320,7 +320,11 @@ class TingEntity extends DingEntity {
    * @return array
    */
   public function getIsbn() {
-    $isbn = $this->data->get('identifier_isbn');
+    $isbn = NULL;
+
+    if (isset($this->data)) {
+      $isbn = $this->data->get('identifier_isbn');
+    }
 
     // Nothing to do.
     if (empty($isbn)) {
