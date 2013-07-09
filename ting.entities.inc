@@ -246,7 +246,7 @@ class TingEntity extends DingEntity {
       $this->_creators = $creators;
     }
 
-    return $this->_creators;
+    return (array) $this->_creators;
   }
 
   public function setCreators(array $creators) {
