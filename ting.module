@@ -871,13 +871,18 @@ function ting_object_view($object, $view_mode = 'full', $langcode = NULL) {
     '#theme' => 'ting_object',
     '#object' => $object,
     '#view_mode' => $view_mode,
-    '#cache' => array(
-      'cid' => 'ting_view:' . $view_mode . ':' . $object->getId(),
-      'expire' => 86400, // 1 day.
-      // TODO: probably here will be needed better cache invalidation.
-      // 'granularity' => DRUPAL_CACHE_PER_USER,
-    )
   );
+
+  // Cache rendering phase if global cache enabled.
+  $ttl = variable_get('ting_cache_lifetime', FALSE);
+  if ($ttl) {
+    $build += array(
+      '#cache' => array(
+        'cid' => 'ting_view:' . $view_mode . ':' . $object->getId(),
+        'expire' => $ttl,
+      ),
+    );
+  }
 
   drupal_alter('ting_view', $build);
 
