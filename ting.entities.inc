@@ -191,7 +191,7 @@ class TingEntity extends DingEntity {
 
   private function splitSerie() {
     $serie = $this->data->get('title_series');
-    return explode(';', $serie);
+    return explode(';', (array) $serie);
   }
 
   public function getSerieTitle() {
