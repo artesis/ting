@@ -191,7 +191,12 @@ class TingEntity extends DingEntity {
 
   private function splitSerie() {
     $serie = $this->data->get('title_series');
-    return explode(';', (array) $serie);
+    if (is_array($serie)) {
+      // Array here does not contain series title and number.
+      // Ex: 100200:23583828.
+      return FALSE;
+    }
+    return explode(';', $serie);
   }
 
   public function getSerieTitle() {
