@@ -103,6 +103,11 @@ function ting_get_objects($ids) {
     $request->setLimits($i * 50 + 1, 50);
 
     $result = ting_execute_cache($request);
+    // Happens only when/if opensearch is down.
+    // @ToDo need to find  better solution for this one, suing try/catch.
+    if ($result == FALSE) {
+      break;
+    }
     if ($result->count()) {
       foreach ($result as $object) {
         $objects[$object->getObjectId()] = $object;
