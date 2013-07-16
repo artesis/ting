@@ -11,6 +11,10 @@ function ting_get_object_request($object_id) {
   $request->setRelationData('full');
 
   $result = ting_execute_cache($request);
+  if (empty($result)) {
+    return NULL;
+  }
+
   $object = $result->getObject();
 
   $items = entity_load('ting_object', array(), array('ding_entity_id' => array($object->getObjectId())));
