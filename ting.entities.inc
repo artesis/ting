@@ -152,10 +152,19 @@ class TingEntity extends DingEntity {
 
   public function getType() {
     if (empty($this->_type)) {
-      $this->_type = $this->data->get('type_bibdktype');
+      $type = $this->data->get('type_bibdktype');
+      $this->_type = is_array($type) ? current($type) : $type;
     }
 
     return $this->_type;
+  }
+
+  /**
+   * @return bool
+   *  true if this item has many types.
+   */
+  public function isMultiType() {
+    return is_array($this->data->get('type_bibdktype'));
   }
 
   public function setType($type) {
@@ -174,8 +183,12 @@ class TingEntity extends DingEntity {
     $this->_title = $title;
   }
 
-  function getYear() {
+  public function getYear() {
     $year = $this->data->get('date');
+
+    if (is_array($year)) {
+      return current($year);
+    }
 
     return !empty($year) ? $year : FALSE;
   }
