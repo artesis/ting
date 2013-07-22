@@ -292,8 +292,12 @@ class TingEntity extends DingEntity {
   }
 
   public function getSubjectGenre() {
-    $date = $this->data->get('subject_genre');
-    return !empty($date) ? $date : FALSE;
+    $genre = $this->data->get('subject_genre');
+    if (is_array($genre)) {
+      $genre = implode(', ', $genre);
+    }
+
+    return !empty($genre) ? $genre : FALSE;
   }
 
   public function getOnlineUrl() {
