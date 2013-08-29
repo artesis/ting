@@ -148,7 +148,9 @@ class TingEntity extends DingEntity {
     return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
-  // Created this method to avoid core-duplications.
+  /**
+  * Created this method to avoid core-duplications.
+  */
   private function getContributorTypebased($entry) {
     $result = array();
     $contrib = $this->data->get($entry);
@@ -161,7 +163,9 @@ class TingEntity extends DingEntity {
     return $result;
   }
 
-  // Return array of fetched contributors.
+  /**
+  * Return array of fetched contributors.
+  */
   public function getContributors() {
     return array_merge(
       $this->getContributorTypebased('contributor'),
