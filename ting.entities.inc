@@ -123,10 +123,28 @@ class TingEntity extends DingEntity {
     return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
-  // pjo 26-09-11 ; getmethod contributor
+  // Created this method to avoid core-duplications.
+  private function getContributorTypebased($entry) {
+    $result = array();
+    $contrib = $this->data->get($entry);
+    if (!empty($contrib)) {
+      if (!is_array($contrib)) {
+        $contrib = array($contrib);
+      }
+      $result = $contrib;
+    }
+    return $result;
+  }
+
+  // Return array of fetched contributors.
   public function getContributors() {
-    $contributors = $this->data->get('contributor');
-    return $contributors;
+    return array_merge(
+      $this->getContributorTypebased('contributor'),
+      $this->getContributorTypebased('contributor_aut'),
+      $this->getContributorTypebased('contributor_dkmed'),
+      $this->getContributorTypebased('contributor_ctb'),
+      $this->getContributorTypebased('contributor_trl')
+    );
   }
 
   public function getLocalId() {
