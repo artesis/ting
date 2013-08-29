@@ -118,6 +118,31 @@ class TingEntity extends DingEntity {
     return $result;
   }
 
+  public function getSubjectDBCM() {
+    $result = array();
+    $subjects = $this->data->get('subject_dbcm');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
+      }
+      $result = $subjects;
+    }
+    return $result;
+  }
+
+  public function getSubjectDBCF() {
+    $result = array();
+    $subjects = $this->data->get('subject_dbcf');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
+      }
+      $result = $subjects;
+    }
+    return $result;
+  }
+
+
   public function getIsPartOf() {
     $isPartOf = $this->data->get('ispartof');
     return !empty($isPartOf) ? $isPartOf : FALSE;
@@ -280,6 +305,9 @@ class TingEntity extends DingEntity {
     if (!empty($subjects) && !is_array($subjects)) {
       $subjects = array($subjects);
     }
+    // Merge other subjects.
+    $subjects = array_merge(($subjects != NULL ? $subjects : array()), $this->getSubjectDBCM(), $this->getSubjectDBCF(), $this->getSubjectDBCS());
+
     return $subjects;
   }
 
