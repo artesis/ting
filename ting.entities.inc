@@ -177,11 +177,11 @@ class TingEntity extends DingEntity {
   }
 
   public function getLocalId() {
-    if (empty($this->_localId)) {
-      $id = explode(':', $this->data->getObjectId());
-      $this->_localId = $id[1];
-    }
-    return $this->_localId;
+    return $this->data->getLocalId();
+  }
+
+  public function getOwnerId() {
+    return $this->data->getOwnerId();
   }
 
   public function setLocalId($id) {
@@ -190,11 +190,6 @@ class TingEntity extends DingEntity {
 
   public function setDingEntityId($id) {
     $this->ding_entity_id = $id;
-  }
-
-  public function getOwnerId() {
-    $owner = $this->data->get('ownerid');
-    return !empty($owner) ? $owner : FALSE;
   }
 
   public function getType() {
