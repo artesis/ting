@@ -878,7 +878,7 @@ function ting_object_view($object, $view_mode = 'full', $langcode = NULL) {
   if ($ttl) {
     $build += array(
       '#cache' => array(
-        'cid' => 'ting_view:' . $view_mode . ':' . $object->getId(),
+        'cid' => 'ting_view:' . $langcode . ':' . $view_mode . ':' . $object->getId(),
         'expire' => $ttl,
       ),
     );
