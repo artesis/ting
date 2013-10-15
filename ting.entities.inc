@@ -177,7 +177,10 @@ class TingEntity extends DingEntity {
   }
 
   public function getLocalId() {
-    return $this->data->getLocalId();
+    if (empty($this->_localId)) {
+      $this->_localId = $this->data->getLocalId();
+    }
+    return $this->_localId;
   }
 
   public function getOwnerId() {
