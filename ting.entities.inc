@@ -82,12 +82,12 @@ class TingEntity extends DingEntity {
   protected $image = array();
 
   public function getExtent() {
-    $extent = $this->data->get('extent');
+    $extent = $this->get('extent');
     return !empty($extent) ? $extent : FALSE;
   }
 
   public function getClassification() {
-    $dk5 = $this->data->get('subject_dk5');
+    $dk5 = $this->get('subject_dk5');
     if ($dk5 == 'sk') {
       $dk5 = '';
     }
@@ -96,7 +96,7 @@ class TingEntity extends DingEntity {
 
   public function getSubjectDK5Text() {
     $result = array();
-    $dk5 = $this->data->get('subject_dk5text');
+    $dk5 = $this->get('subject_dk5text');
     if (!empty($dk5)) {
       if (!is_array($dk5)) {
         $dk5 = array($dk5);
@@ -108,7 +108,7 @@ class TingEntity extends DingEntity {
 
   public function getSubjectDBCS() {
     $result = array();
-    $subjects = $this->data->get('subject_dbcs');
+    $subjects = $this->get('subject_dbcs');
     if (!empty($subjects)) {
       if (!is_array($subjects)) {
         $subjects = array($subjects);
@@ -120,7 +120,7 @@ class TingEntity extends DingEntity {
 
   public function getSubjectDBCM() {
     $result = array();
-    $subjects = $this->data->get('subject_dbcm');
+    $subjects = $this->get('subject_dbcm');
     if (!empty($subjects)) {
       if (!is_array($subjects)) {
         $subjects = array($subjects);
@@ -132,7 +132,7 @@ class TingEntity extends DingEntity {
 
   public function getSubjectDBCF() {
     $result = array();
-    $subjects = $this->data->get('subject_dbcf');
+    $subjects = $this->get('subject_dbcf');
     if (!empty($subjects)) {
       if (!is_array($subjects)) {
         $subjects = array($subjects);
@@ -144,7 +144,7 @@ class TingEntity extends DingEntity {
 
 
   public function getIsPartOf() {
-    $isPartOf = $this->data->get('ispartof');
+    $isPartOf = $this->get('ispartof');
     return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
@@ -153,7 +153,7 @@ class TingEntity extends DingEntity {
   */
   private function getContributorTypebased($entry) {
     $result = array();
-    $contrib = $this->data->get($entry);
+    $contrib = $this->get($entry);
     if (!empty($contrib)) {
       if (!is_array($contrib)) {
         $contrib = array($contrib);
@@ -178,12 +178,20 @@ class TingEntity extends DingEntity {
 
   public function getLocalId() {
     if (empty($this->_localId)) {
-      $this->_localId = $this->data->getLocalId();
+      if (empty($this->data)) {
+        $this->_localId = NULL;
+      }
+      else {
+        $this->_localId = $this->data->getLocalId();
+      }
     }
     return $this->_localId;
   }
 
   public function getOwnerId() {
+    if (empty($this->data)) {
+      return NULL;
+    }
     return $this->data->getOwnerId();
   }
 
@@ -197,7 +205,7 @@ class TingEntity extends DingEntity {
 
   public function getType() {
     if (empty($this->_type)) {
-      $type = $this->data->get('type_bibdktype');
+      $type = $this->get('type_bibdktype');
       $this->_type = is_array($type) ? current($type) : $type;
     }
 
@@ -209,7 +217,7 @@ class TingEntity extends DingEntity {
    *  true if this item has many types.
    */
   public function isMultiType() {
-    return is_array($this->data->get('type_bibdktype'));
+    return is_array($this->get('type_bibdktype'));
   }
 
   public function setType($type) {
@@ -229,7 +237,7 @@ class TingEntity extends DingEntity {
   }
 
   public function getYear() {
-    $year = $this->data->get('date');
+    $year = $this->get('date');
 
     if (is_array($year)) {
       return current($year);
@@ -248,7 +256,7 @@ class TingEntity extends DingEntity {
   }
 
   private function splitSerie() {
-    $serie = $this->data->get('title_series');
+    $serie = $this->get('title_series');
     if (is_array($serie)) {
       // Array here does not contain series title and number.
       // Ex: 100200:23583828.
@@ -267,7 +275,7 @@ class TingEntity extends DingEntity {
   }
 
   public function getAbstract() {
-    $abstract = $this->data->get('abstract');
+    $abstract = $this->get('abstract');
     return !empty($abstract) ? $abstract : FALSE;
   }
 
@@ -317,11 +325,11 @@ class TingEntity extends DingEntity {
   }
 
   public function getCreatorMus() {
-    return $this->data->get('creator_mus');
+    return $this->get('creator_mus');
   }
 
   public function getSubjects() {
-    $subjects = $this->data->get('subject');
+    $subjects = $this->get('subject');
     if (!empty($subjects) && !is_array($subjects)) {
       $subjects = array($subjects);
     }
@@ -332,18 +340,18 @@ class TingEntity extends DingEntity {
   }
 
   public function getLanguage() {
-    $language = $this->data->get('language');
+    $language = $this->get('language');
     return !empty($language) ? $language : FALSE;
   }
 
   public function getLanguageIso() {
-    $language = $this->data->get('language_iso639_2');
+    $language = $this->get('language_iso639_2');
     return !empty($language) ? $language : FALSE;
   }
 
   public function getDate() {
     if (empty($this->_date)) {
-      $this->_date = $this->data->get('date');
+      $this->_date = $this->get('date');
     }
     return $this->_date;
   }
@@ -353,7 +361,7 @@ class TingEntity extends DingEntity {
   }
 
   public function getSubjectGenre() {
-    $genre = $this->data->get('subject_genre');
+    $genre = $this->get('subject_genre');
     if (is_array($genre)) {
       $genre = implode(', ', $genre);
     }
@@ -362,7 +370,7 @@ class TingEntity extends DingEntity {
   }
 
   public function getOnlineUrl() {
-    $url = $this->data->get('identifier_uri');
+    $url = $this->get('identifier_uri');
     if (!empty($url)) {
       drupal_alter('ting_online_url', $url, $this);
       return $url;
@@ -370,17 +378,17 @@ class TingEntity extends DingEntity {
   }
 
   public function getSource() {
-    $source = $this->data->get('source');
+    $source = $this->get('source');
     return !empty($source) ? $source : FALSE;
   }
 
   public function getAcSource() {
-    $source = $this->data->get('ac_source');
+    $source = $this->get('ac_source');
     return !empty($source) ? $source : FALSE;
   }
 
   public function getDescription() {
-    $description = $this->data->get('description');
+    $description = $this->get('description');
     return !empty($description) ? $description : FALSE;
   }
 
@@ -390,11 +398,7 @@ class TingEntity extends DingEntity {
    * @return array
    */
   public function getIsbn() {
-    $isbn = NULL;
-
-    if (isset($this->data)) {
-      $isbn = $this->data->get('identifier_isbn');
-    }
+    $isbn = $this->get('identifier_isbn');
 
     // Nothing to do.
     if (empty($isbn)) {
@@ -414,66 +418,69 @@ class TingEntity extends DingEntity {
   }
 
   public function getIssn() {
-    return $this->data->get('identifier_issn');
+    return $this->get('identifier_issn');
   }
 
   public function getDescriptionSeries() {
-    return $this->data->get('description_series');
+    return $this->get('description_series');
   }
 
   public function getFormat() {
-    return $this->data->get('format');
+    return $this->get('format');
   }
 
   public function getLanguageSpoken() {
-    return $this->data->get('language_spoken');
+    return $this->get('language_spoken');
   }
 
   public function getLanguageSubtitles() {
-    return $this->data->get('language_subtitles');
+    return $this->get('language_subtitles');
   }
 
   public function getSpatial() {
-    return $this->data->get('spatial');
+    return $this->get('spatial');
   }
 
   public function getHaspartTrack() {
-    return $this->data->get('haspart_track');
+    return $this->get('haspart_track');
   }
 
   public function getIsreferencedby() {
-    return $this->data->get('isreferencedby');
+    return $this->get('isreferencedby');
   }
 
   public function getVersion() {
-    return $this->data->get('version');
+    return $this->get('version');
   }
 
   public function getPublisher() {
-    return $this->data->get('publisher');
+    return $this->get('publisher');
   }
 
   public function getRights() {
-    return $this->data->get('rights');
+    return $this->get('rights');
   }
 
   public function getAudience() {
-    return $this->data->get('audience');
+    return $this->get('audience');
   }
 
   public function getAudienceAge() {
-    return $this->data->get('audience_age');
+    return $this->get('audience_age');
   }
 
   public function getAudiencePegi() {
-    return $this->data->get('audience_pegi');
+    return $this->get('audience_pegi');
   }
 
   public function getAudienceMedieraad() {
-    return $this->data->get('audience_medieraad');
+    return $this->get('audience_medieraad');
   }
 
   public function get($key) {
+    if (empty($this->data)) {
+      return NULL;
+    }
     return $this->data->get($key);
   }
 
@@ -489,15 +496,18 @@ class TingEntity extends DingEntity {
   }
 
   public function getFormatsAvailable() {
+    if (empty($this->data)) {
+      return NULL;
+    }
     return $this->data->getFormats();
   }
 
   public function getIdentifier() {
-    return $this->data->get('identifier');
+    return $this->get('identifier');
   }
 
   public function getIdentifierUri() {
-    return $this->data->get('identifier_uri');
+    return $this->get('identifier_uri');
   }
 
   /**

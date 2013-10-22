@@ -29,9 +29,10 @@ function ting_get_object_request($object_id) {
  * result, and any sub-objects, so fetching objects from a recently
  * fetched collection won't trigger another backend request.
  *
- * @param $object_id The id to fetch.
- * @param $collection Whether to return a collection, if possible, or
- *   an object.
+ * @param string $object_id
+ *   The id to fetch.
+ * @param bool $collection
+ *   Whether to return a collection, if possible, or an object.
  *
  * @todo Should use getObject, but the ting-client lib doesn't implement that.
  */
@@ -75,46 +76,21 @@ function ting_get_object($object_id, $collection = FALSE) {
  * @todo Should use getObject when getObject supports getting multiple.
  */
 function ting_get_objects($ids) {
-
   $objects = array();
+
   // Prefill from cache.
   foreach ($ids as $id) {
     $objects[$id] = ting_cache_get($id);
   }
 
   $query = array();
-  foreach ($objects as $id => $object) {
-    if (!isset($object)) {
-      $query[] = 'rec.id=' . $id;
+  $keys = array_keys($objects);
+  foreach ($keys as $id) {
+    if (empty($objects[$id])) {
+      $object = ting_get_object($id);
+      $objects[$id] = $object;
     }
   }
-  // opensearch is limited to 50 results per call, so iterate until all have been fetched.
-  $i = 0;
-  do {
-    // I query is empty, then don't do it.
-    // Not necessary to do in each iteration, but it doesn't hurt much.
-    if (sizeof($query) == 0) {
-      break;
-    }
-
-    $request = ting_get_request_factory('search');
-    $request->setQuery(join(' OR ', $query));
-    // Do it in steps of 50.
-    $request->setLimits($i * 50 + 1, 50);
-
-    $result = ting_execute_cache($request);
-    // Happens only when/if opensearch is down.
-    // @ToDo need to find  better solution for this one, suing try/catch.
-    if ($result == FALSE) {
-      break;
-    }
-    if ($result->count()) {
-      foreach ($result as $object) {
-        $objects[$object->getObjectId()] = $object;
-      }
-    }
-    $i++;
-  } while ($result->hasMore());
 
   return $objects;
 }
