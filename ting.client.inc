@@ -51,6 +51,9 @@ function ting_get_object($object_id, $collection = FALSE) {
       $request = ting_get_request_factory('object');
       $request->setId($object_id);
       $result = ting_execute_cache($request);
+      if (empty($result)) {
+        return NULL;
+      }
       $object = $result->getObject();
     }
   }
