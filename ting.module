@@ -795,7 +795,8 @@ function _ting_fetch_well_types() {
   $result = ting_do_search("*=*", 0, 0, $options);
 
   $types = array();
-  foreach ($result->facets['facet.type']->terms as $term => $count) {
+  $facets = $result->getFacets();
+  foreach ($facets['facet.type']->terms as $term => $count) {
     $types[drupal_strtolower($term)] = $count;
   }
 
@@ -821,7 +822,8 @@ function _ting_fetch_well_sources() {
   $result = ting_do_search("*=*", 0, 0, $options);
 
   $sources = array();
-  foreach ($result->facets['facet.acSource']->terms as $term => $count) {
+  $facets = $result->getFacets();
+  foreach ($facets['facet.acSource']->terms as $term => $count) {
     $sources[drupal_strtolower($term)] = $count;
   }
 
