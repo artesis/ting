@@ -87,11 +87,7 @@ class TingEntity extends DingEntity {
   }
 
   public function getClassification() {
-    $dk5 = $this->get('subject_dk5');
-    if ($dk5 == 'sk') {
-      $dk5 = '';
-    }
-    return $dk5;
+    return $this->get('subject_dk5');
   }
 
   public function getSubjectDK5Text() {
