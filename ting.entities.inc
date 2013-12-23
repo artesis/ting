@@ -276,6 +276,10 @@ class TingEntity extends DingEntity {
   }
 
   public function getRelations() {
+    if (!$this->data) {
+      return array();
+    }
+
     $relations = $this->data->getRelations();
 
     $this->relations = array();
