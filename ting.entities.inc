@@ -489,9 +489,16 @@ class TingEntity extends DingEntity {
       if (module_exists('devel')) {
         kpr(ddebug_backtrace());
       }
-      watchdog('ting', t('Use getter methor for: @prop'), array('@prop' => $prop), WATCHDOG_CRITICAL);
-      throw new Exception('Use getter methor for: ' . $prop);
+      $exception = new Exception('Use getter methor for: ' . $prop);
+      watchdog(
+        'ting',
+        t('Use getter methor for: @prop, <pre>!trace</pre>'),
+        array('@prop' => $prop, '!trace' => $exception->getTraceAsString()),
+        WATCHDOG_CRITICAL
+      );
+      throw $exception;
     }
+
     return parent::__get($prop);
   }
 
