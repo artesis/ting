@@ -513,6 +513,10 @@ class TingEntity extends DingEntity {
     return $this->get('identifier');
   }
 
+  public function getAcIdentifier() {
+    return $this->get('ac_identifier');
+  }
+
   public function getIdentifierUri() {
     return $this->get('identifier_uri');
   }
