@@ -55,10 +55,10 @@ function ting_get_objects_with_images($query = '', $count = 0, $sort = '', $imag
         }
       }
 
-      // No images for for current result set, so get more results.
+      // No images for for current result set, so get path for default image.
       if (empty($images) && $covers_service) {
-        $result = _ting_search($request, $page++, 10, $sort);
-        continue;
+        $images[$search_item->getLocalId() . ':' . $image_style] =
+          '/' . drupal_get_path('module', 'ding_item_list') . '/images/no-image-minil.png';
       }
 
       $image_style = reset($image_styles);
