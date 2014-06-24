@@ -3,26 +3,23 @@
  * @file
  * Wrapper functions for Ting client.
  */
-
-
 function ting_get_object_request($object_id) {
-  $request = ting_get_request_factory()->getObjectRequest();
-  if ($agency = variable_get('ting_agency', FALSE)) {
-    $request->setAgency($agency);
-  }
-  $request->setObjectId($object_id);
+  $request = ting_get_request_factory('object');
+
+  $request->setId($object_id);
   $request->setAllRelations(TRUE);
   $request->setRelationData('full');
 
-  // Set search profile, if applicable.
-  $profile = variable_get('ting_search_profile', '');
-  if (!empty($profile) && method_exists($request, 'setProfile')) {
-    $request->setProfile($profile);
+  $result = ting_execute_cache($request);
+  if (empty($result)) {
+    return NULL;
   }
 
-  $object = ting_execute_cache($request);
+  $object = $result->getObject();
 
-  return $object;
+  $items = entity_load('ting_object', array(), array('ding_entity_id' => array($object->getObjectId())));
+
+  return current($items);
 }
 
 /**
@@ -32,9 +29,10 @@ function ting_get_object_request($object_id) {
  * result, and any sub-objects, so fetching objects from a recently
  * fetched collection won't trigger another backend request.
  *
- * @param $object_id The id to fetch.
- * @param $collection Whether to return a collection, if possible, or
- *   an object.
+ * @param string $object_id
+ *   The id to fetch.
+ * @param bool $collection
+ *   Whether to return a collection, if possible, or an object.
  *
  * @todo Should use getObject, but the ting-client lib doesn't implement that.
  */
@@ -51,19 +49,13 @@ function ting_get_object($object_id, $collection = FALSE) {
     ting_cache_set($object_id, NULL);
 
     if (!$object) {
-      $request = ting_get_request_factory()->getCollectionRequest();
-      $request->setObjectId($object_id);
-      if ($agency = variable_get('ting_agency', FALSE)) {
-        $request->setAgency($agency);
+      $request = ting_get_request_factory('object');
+      $request->setId($object_id);
+      $result = ting_execute_cache($request);
+      if (empty($result)) {
+        return NULL;
       }
-
-      $profile = variable_get('ting_search_profile', '');
-      if (!empty($profile) && method_exists($request, 'setProfile')) {
-        $request->setProfile($profile);
-      }
-
-      $request->setAllObjects(false);
-      $object = ting_execute_cache($request);
+      $object = $result->getObject();
     }
   }
 
@@ -88,63 +80,21 @@ function ting_get_object($object_id, $collection = FALSE) {
  */
 function ting_get_objects($ids) {
   $objects = array();
+
   // Prefill from cache.
   foreach ($ids as $id) {
     $objects[$id] = ting_cache_get($id);
-    if (isset($objects[$id]) && isset($objects[$id]->objects)) {
-      foreach ($objects[$id]->objects as $sub_object) {
-        if ($sub_object->id == $id) {
-          $objects[$id] = $sub_object;
-          continue 2;
-        }
-      }
-      // No sub-object had the same id. Somethings broken.
-      $objects[$id] = NULL;
-    }
   }
 
   $query = array();
-  foreach ($objects as $id => $object) {
-    if (!isset($object)) {
-      $query[] = 'rec.id=' . $id;
+  $keys = array_keys($objects);
+  foreach ($keys as $id) {
+    if (empty($objects[$id])) {
+      $object = ting_get_object($id);
+      $objects[$id] = $object;
     }
   }
-  // opensearch is limited to 50 results per call, so iterate until all have been fetched.
-  $i = 0;
-  do {
-    // I query is empty, then don't do it.
-    // Not necessary to do in each iteration, but it doesn't hurt much.
-    if (sizeof($query) == 0) {
-      break;
-    }
 
-    $request = ting_get_request_factory()->getSearchRequest();
-    if ($agency = variable_get('ting_agency', FALSE)) {
-      $request->setAgency($agency);
-    }
-    $profile = variable_get('ting_search_profile', '');
-    if (!empty($profile) && method_exists($request, 'setProfile')) {
-      $request->setProfile($profile);
-    }
-    $request->setQuery(join(' OR ', $query));
-    // Do it in steps of 50.
-    $request->setStart($i * 50 + 1);
-    $request->setNumResults(50);
-    $request->setAllObjects(TRUE);
-
-    $result = ting_execute_cache($request);
-
-    if ($result && is_array($result->collections)) {
-      foreach ($result->collections as $collection) {
-        if (is_array($collection->objects) && sizeof($collection->objects)) {
-          foreach ($collection->objects as $object) {
-            $objects[$object->id] = $object;
-          }
-        }
-      }
-    }
-    $i++;
-  } while ($result->more);
   return $objects;
 }
 
@@ -170,41 +120,45 @@ function ting_get_objects($ids) {
  *    The search result
  */
 function ting_do_search($query, $page = 1, $results_per_page = 10, $options = array()) {
-  $request = ting_get_request_factory()->getSearchRequest();
+  /* @var $request TingSearchRequest */
+  $request = ting_get_request_factory('search');
   $request->setQuery($query);
-  if ($agency = variable_get('ting_agency', FALSE)) {
-    $request->setAgency($agency);
-  }
-  $request->setStart($results_per_page * ($page - 1) + 1);
-  $request->setNumResults($results_per_page);
+  $request->setLimits($results_per_page * ($page - 1) + 1, $results_per_page);
 
-  if (!isset($options['facets']) and module_exists('ding_facetbrowser')) {
-    $options['facets'] = array();
-    // Populate facets with configured facets.
-    foreach (variable_get('ding_facetbrowser_facets', array()) as $facet) {
-      $options['facets'][] = $facet['name'];
+  // Set facets.
+  if (!isset($options['facets'])) {
+    // Populate facets with configured facets in ding_facetbrowser.
+    if (module_exists('ding_facetbrowser')) {
+      $options['facets'] = array();
+      foreach (variable_get('ding_facetbrowser_facets', array()) as $facet) {
+        $options['facets'][] = $facet['name'];
+      }
+    }     // Default facets.
+    else {
+      $options['facets'] = array(
+        'facet.subject',
+        'facet.creator',
+        'facet.type',
+        'facet.category',
+        'facet.language',
+        'facet.date',
+        'facet.acSource'
+      );
     }
   }
+  $request->setFacets($options['facets']);
 
-  $request->setFacets((isset($options['facets'])) ? $options['facets'] : array(
-    'facet.subject',
-    'facet.creator',
-    'facet.type',
-    'facet.category',
-    'facet.language',
-    'facet.date',
-    'facet.acSource',
-  ));
-  $request->setNumFacets((isset($options['numFacets'])) ? $options['numFacets'] : ((sizeof($request->getFacets()) == 0) ? 0 : 10));
+  // Set number of terms in facets.
+  if (!empty($options['facets'])) {
+    $terms = 10;
+    if (!empty($options['numFacets'])) {
+      $terms = $options['numFacets'];
+    }
+    $request->setTermsInFacets($terms);
+  }
+
   if (isset($options['sort']) && $options['sort']) {
     $request->setSort($options['sort']);
-  }
-  $request->setAllObjects(isset($options['allObjects']) ? $options['allObjects'] : FALSE);
-
-  // Set search profile, if applicable.
-  $profile = variable_get('ting_search_profile', '');
-  if (!empty($profile) && method_exists($request, 'setProfile')) {
-    $request->setProfile($profile);
   }
 
   // Apply custom ranking if enabled.
@@ -214,7 +168,7 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
       $fields[] = array(
         'fieldName' => $field['field_name'],
         'fieldType' => $field['field_type'],
-        'weight' => $field['weight'],
+        'weight' => $field['weight']
       );
     }
 
@@ -223,22 +177,21 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
       $fields[] = array(
         'fieldName' => 'cql.anyIndexes',
         'fieldType' => 'phrase',
-        'weight' => 1,
+        'weight' => 1
       );
 
       $fields[] = array(
         'fieldName' => 'cql.anyIndexes',
         'fieldType' => 'word',
-        'weight' => 1,
+        'weight' => 1
       );
 
       $request->userDefinedRanking = array(
         'tieValue' => 0.1,
-        'rankField' => $fields,
+        'rankField' => $fields
       );
     }
-  }
-  // Otherwise, use the ranking setting.
+  }   // Otherwise, use the ranking setting.
   else {
     $request->setRank((isset($options['rank']) && $options['rank']) ? $options['rank'] : 'rank_general');
   }
@@ -252,23 +205,30 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
       $uboosts[] = array(
         'fieldName' => $boost_field['field_name'],
         'fieldValue' => $boost_field['field_value'],
-        'weight' => $boost_field['weight'],
+        'weight' => $boost_field['weight']
       );
     }
-    $request->userDefinedBoost = array('boostField' => $uboosts);
+    $request->setParameter('userDefinedBoost', array(
+      'boostField' => $uboosts,
+    ));
+  }
+
+  if (!empty($options['skip_relations'])) {
+    $request->skipRelations();
   }
 
   $search_result = ting_execute_cache($request);
+
   // Replace collections with proper TingCollection objects.
-  if ($search_result && is_array($search_result->collections)) {
+  if ($search_result) {
     $ids = array();
-    foreach ($search_result->collections as &$collection) {
-      if (isset($collection->objects[0])) {
-        $ids[] = $collection->objects[0]->id;
-      }
+    foreach ($search_result as $object) {
+      $ids[] = $object->getObjectId();
     }
-    if (!isset($options['reply_only']) || !$options['reply_only']) {
-      $search_result->collections = entity_load('ting_collection', array(), array('ding_entity_id' => $ids));
+
+    if (empty($options['reply_only'])) {
+      $items = entity_load('ting_object', array(), array('ding_entity_id' => $ids));
+      $search_result->setItems($items);
     }
   }
 
@@ -288,13 +248,33 @@ function ting_execute_cache($request) {
   if (!isset($calls)) {
     $calls = array();
   }
-  $calls[] = $request->getRequest()->getParameters();
+  $calls[] = $request->getParameters();
   $reply = ting_execute($request);
 
+  if (empty($reply)) {
+    return $reply;
+  }
+
+  // Cache objects.
+  foreach ($reply as $object) {
+    ting_cache_set($object->getObjectId(), $object);
+
+    // Cache relation objects.
+    $relations = $object->getRelations();
+    foreach ($relations as $relation) {
+      if (!empty($relation['object'])) {
+        ting_cache_set($relation['object']->getObjectId(), $relation['object']);
+      }
+    }
+
+  }
+
+
+/*
   // Cache any sub-objects (mostly true for collections).
   if (isset($reply->objects)) {
     foreach ($reply->objects as $object) {
-      ting_cache_set($object->id, $object);
+
       // Cache any relations.
       if (isset($object->relations)) {
         foreach ($object->relations as $relation) {
@@ -343,6 +323,7 @@ function ting_execute_cache($request) {
   if (isset($reply->id)) {
     ting_cache_set($reply->id, $reply);
   }
+*/
 
   return $reply;
 }
@@ -352,8 +333,9 @@ function ting_execute_cache($request) {
  */
 function ting_cache_get($id, $collection = FALSE) {
   $cid = 'ting-' . ($collection ? 'collection' : 'object') . ':' . $id;
+  $ttl = variable_get('ting_cache_lifetime', TING_DEFAULT_CACHE_LIFETIME);
 
-  if ($ttl = variable_get('ting_cache_lifetime', TING_DEFAULT_CACHE_LIFETIME)) {
+  if ($ttl) {
     $cache = cache_get($cid);
     if ($cache && ($cache->expire > REQUEST_TIME)) {
       return $cache->data;
@@ -378,13 +360,10 @@ function ting_cache_get($id, $collection = FALSE) {
  * Put item in the static cache.
  */
 function ting_cache_set($id, $value) {
-  $cid = 'ting-object';
-  if ($value instanceof TingClientObjectCollection) {
-    $cid = 'ting-collection';
-  }
-  $cid .= ':' . $id;
+  $cid = 'ting-object:' . $id;
+  $ttl = variable_get('ting_cache_lifetime', TING_DEFAULT_CACHE_LIFETIME);
 
-  if ($ttl = variable_get('ting_cache_lifetime', TING_DEFAULT_CACHE_LIFETIME)) {
+  if ($ttl) {
     $cache = cache_set($cid, $value, 'cache', REQUEST_TIME + $ttl);
   }
   else {
@@ -407,7 +386,7 @@ function ting_cache_set($id, $value) {
  * @return array
  *  An array of TingClientObjectRecommendation objects.
  */
-function ting_get_object_recommendations($isbn, $numResults = 10) {
+function ting_get_object_recommendations($isbn, $num_results = 10) {
   $recommendation_url = ting_get_request_factory()->getRequestUrl('recommendation');
 
   if (empty($recommendation_url)) {
@@ -416,19 +395,20 @@ function ting_get_object_recommendations($isbn, $numResults = 10) {
 
   $request = ting_get_request_factory()->getObjectRecommendationRequest();
   $request->setIsbn($isbn);
-  $request->setNumResults($numResults);
+  $request->setNumResults($num_results);
   return ting_execute($request);
 }
 
 /**
  * Retrieves an initialized Ting client request factory.
  *
- * @return TingClientRequestFactory
+ * @return TingRequestInterface
  */
-function ting_get_request_factory() {
-  static $request_factory;
+function ting_get_request_factory($type) {
+  // Type => URL setting.
+  $url_variables = &drupal_static(__FUNCTION__);
 
-  if (!isset($request_factory)) {
+  if (empty($url_variables)) {
     $url_variables = array(
       'search' => 'ting_search_url',
       'scan' => 'ting_scan_url',
@@ -436,23 +416,31 @@ function ting_get_request_factory() {
       'collection' => 'ting_search_url',
       'spell' => 'ting_spell_url',
       'recommendation' => 'ting_recommendation_url',
+      'relatedObjects' => 'ting_search_url',
     );
 
-    // TODO: This should probably be rethought.
-    $infomedia_url = variable_get('ting_infomedia_url', FALSE);
-    if (module_exists('ting_infomedia') && !empty($infomedia_url)) {
-      $url_variables['infomedia'] = 'ting_infomedia_url';
+    // Add more urls from other modules.
+    $additional_urls = module_invoke_all('ting_request_factory');
+    if (!empty($additional_urls)) {
+      $url_variables = array_merge($url_variables, $additional_urls);
     }
-
-    $urls = array();
-    foreach ($url_variables as $name => $setting) {
-      $urls[$name] = variable_get($setting, FALSE);
-    }
-
-    $request_factory = new TingClientRequestFactory($urls);
   }
 
-  return $request_factory;
+  // Classname for request object.
+  // ex: TingSearchRequest, TingObjectRequest, TingScanRequest, etc.
+  $class_name = 'Ting' . ucfirst($type) . 'Request';
+
+  if (class_exists($class_name)) {
+    // Get settings from drupal.
+    $url = variable_get($url_variables[$type], FALSE);
+    $agency = variable_get('ting_agency', FALSE);
+    $profile = variable_get('ting_search_profile', '');
+
+    $request = new $class_name($url, $agency, $profile);
+    return $request;
+  }
+  // TODO: Throw an error if class does not exist.
+  return NULL;
 }
 
 function ting_add_relations($request, $type = 'full') {
@@ -471,27 +459,11 @@ function ting_add_relations($request, $type = 'full') {
  *   Result of the request or false if an error occurs.
  */
 function ting_execute($request) {
-  // Get additional parameters from other modules.
-  $params = module_invoke_all('ting_pre_execute', $request);
-  if (!empty($params)) {
-    $request->setParameters($params);
-  }
 
   try {
     timer_start('ting');
-    $res = ting_get_client()->execute($request);
+    $response = ting_get_client()->execute($request);
     timer_stop('ting');
-
-    $response = $request->parseResponse($res);
-
-    // Pass parsed results to other modules.
-    // @todo Check if it works for collection of items.
-    $props = module_invoke_all('ting_post_execute', $request, $response, $res);
-    if (!empty($props)) {
-      foreach ($props as $property => $value) {
-        $response->{$property} = $value;
-      }
-    }
 
     return $response;
   }
@@ -511,8 +483,11 @@ function ting_get_client() {
   static $client;
 
   if (!isset($client)) {
-    $logger = (variable_get('ting_enable_logging', FALSE)) ? new TingClientDrupalWatchDogLogger(ting_get_request_factory()) : new TingClientVoidLogger();
-    $client = new TingClient(new TingClientRequestAdapter(), $logger);
+    $logger = new TingClientVoidLogger();
+    if (variable_get('ting_enable_logging', FALSE)) {
+      $logger = new TingClientDrupalWatchDogLogger();
+    }
+    $client = new TingClient($logger);
   }
 
   return $client;
@@ -529,17 +504,14 @@ function ting_get_client() {
  * @return TingClientScanResult
  */
 function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
-  $scan_url = ting_get_request_factory()->getRequestUrl('scan');
-
-  if (empty($scan_url)) {
-    return FALSE;
+  $request = ting_get_request_factory('scan');
+  if (!$request) {
+    return NULL;
   }
 
-  $request = ting_get_request_factory()->getScanRequest();
   $request->setField('phrase.' . $phrase);
   $request->setLower($query);
-  $request = ting_add_agency($request);
-  $request->setNumResults($num_results);
+  $request->setLimit($num_results);
 
   return ting_execute($request);
 }
@@ -549,7 +521,8 @@ function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
  * @return TingClientScanRequest
  */
 function ting_add_agency(TingClientScanRequest $request) {
-  if ($agency = variable_get('ting_agency', FALSE)) {
+  $agency = variable_get('ting_agency', FALSE);
+  if ($agency) {
     $request->setAgency($agency);
   }
   return $request;
@@ -561,15 +534,14 @@ function ting_add_agency(TingClientScanRequest $request) {
  * @return array An array of TingClientSpellSuggestion objects
  */
 function ting_get_spell_suggestions($word, $num_results = 10) {
-  $spell_url = ting_get_request_factory()->getRequestUrl('spell');
+  $request = ting_get_request_factory('spell');
 
-  if (empty($spell_url)) {
+  if (empty($request)) {
     return FALSE;
   }
 
-  $request = ting_get_request_factory()->getSpellRequest();
   $request->setWord($word);
-  $request->setNumResults($num_results);
+  $request->setLimit($num_results);
   return ting_execute($request);
 }
 
