@@ -359,10 +359,10 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
       case 'ting_series_default':
         if ($entity->getSerieTitle()) {
           $element[$delta] = array(
-            // should use phrase.title instead of dc.title but at the moment opensearch does not support the use of phrase.title
+            // should use phrase.title instead of term.title but at the moment opensearch does not support the use of phrase.title
             '#markup' => l(
               check_plain($entity->getSerieTitle()),
-              'search/ting/' . variable_get('ting_admin_register_serie_title', 'dc.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"',
+              'search/ting/' . variable_get('ting_admin_register_serie_title', 'term.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"',
               array('attributes' => array('class' => array('series')))
             ) . ' : ' . check_plain($entity->getSerieNumber()),
           );
@@ -380,7 +380,7 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           foreach ($_creators as $creator) {
             $creators[] = l(
               $creator,
-              'search/ting/dc.creator="' . $creator . '"',
+              'search/ting/term.creator="' . $creator . '"',
               array('attributes' => array('class' => array('author')))
             );
           }
@@ -393,7 +393,7 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
         if (count($entity->getSubjects())) {
           $subjects = array();
           foreach ($entity->getSubjects() as $subject) {
-            $subjects[] = l($subject, 'search/ting/dc.subject="' . $subject . '"', array('attributes' => array('class' => array('subject'))));
+            $subjects[] = l($subject, 'search/ting/term.subject="' . $subject . '"', array('attributes' => array('class' => array('subject'))));
           }
           $element[$delta] = array(
             '#markup' => implode(' ', $subjects),
