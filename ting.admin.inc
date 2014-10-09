@@ -361,7 +361,7 @@ function _ting_boost_field_sort($a, $b) {
  * Felter: Forfatter, titel, emneord,
  */
 function ting_admin_register_settings() {
-  // should use phrase.title instead of dc.title but at the moment opensearch does not support the use of phrase.title
+  // should use phrase.title instead of term. but at the moment opensearch does not support the use of phrase.title
   $form['ting_admin_register_serie_title'] = array(
     '#type' => 'textfield',
     '#title' => t('Serie title'),
