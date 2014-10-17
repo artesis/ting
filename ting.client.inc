@@ -186,10 +186,12 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
         'weight' => 1
       );
 
-      $request->userDefinedRanking = array(
+      $userDefinedRanking = array(
         'tieValue' => 0.1,
         'rankField' => $fields
       );
+
+      $request->setParameter('userDefinedRanking', $userDefinedRanking);
     }
   }   // Otherwise, use the ranking setting.
   else {
