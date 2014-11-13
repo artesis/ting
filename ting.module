@@ -630,7 +630,7 @@ function ting_boost_field_element_process($element, $form_state) {
     '#type' => 'select',
     '#options' => array(
       '' => '- ' . t('Choose') . ' -',
-      'term.acSource' => t('Source'),
+      'term.source' => t('Source'),
       'term.creator' => t('Author'),
       'term.date' => t('Year of publish'),
       'term.language' => t('Language'),
