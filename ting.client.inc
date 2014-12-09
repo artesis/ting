@@ -210,9 +210,7 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
         'weight' => $boost_field['weight']
       );
     }
-    $request->setParameter('userDefinedBoost', array(
-      'boostField' => $uboosts,
-    ));
+    $request->setParameter('userDefinedBoost', $uboosts);
   }
 
   if (!empty($options['skip_relations'])) {
