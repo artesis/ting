@@ -49,6 +49,21 @@ function ting_get_object($object_id, $collection = FALSE) {
     ting_cache_set($object_id, NULL);
 
     if (!$object) {
+      $request = ting_get_request_factory('search');
+      $request->setQuery('rec.id=' . $object_id);
+
+      $result = ting_execute_cache($request);
+      if (empty($result)) {
+        return NULL;
+      }
+
+      foreach ($result as $res) {
+        $object_id = $res->getObjectId();
+        if (!empty($object_id)) {
+          break;
+        }
+      }
+
       $request = ting_get_request_factory('object');
       $request->setId($object_id);
       $result = ting_execute_cache($request);
@@ -68,6 +83,7 @@ function ting_get_object($object_id, $collection = FALSE) {
       }
     }
     // No sub-object had the same id. Somethings broken.
+
     return NULL;
   }
   return $object;
