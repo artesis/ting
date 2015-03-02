@@ -75,6 +75,13 @@ function ting_field_info() {
       'default_formatter' => 'ting_collection_types_default',
       'no_ui' => TRUE,
     ),
+    'ting_date' => array(
+      'label' => t('Ting object date'),
+      'description' => t('Ting object date'),
+      'default_widget' => 'hidden',
+      'default_formatter' => 'ting_date_default',
+      'no_ui' => TRUE,
+    ),
   );
 }
 
@@ -87,6 +94,7 @@ function ting_widget_info_alter(&$info) {
       'ting_title',
       'ting_type',
       'ting_abstract',
+      'ting_date',
       'ting_author',
       'ting_subjects',
       'ting_primary_object',
@@ -113,7 +121,7 @@ function ting_field_load($entity_type, $entities, $field, $instances, $langcode,
   else {
     foreach ($entities as $id => $entity) {
       $items[$id][0] = array(
-        'id' => $entity->id,
+        'id' => $entity->getId(),
       );
     }
   }
@@ -137,6 +145,12 @@ function ting_field_formatter_info() {
       'label' => t('Default'),
       'field types' => array(
         'ting_type',
+      ),
+    ),
+    'ting_date_default' => array(
+      'label' => t('Default'),
+      'field types' => array(
+        'ting_date',
       ),
     ),
     'ting_series_default' => array(
@@ -311,10 +325,14 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
         }
         if ($display['settings']['link_type'] != 'none') {
           $url = entity_uri($type, $entity);
-          $title = l($entity->title, $url['path'], $url['options']);
+          $options = $url['options'];
+          if (empty($options)) {
+            $options = array();
+          }
+          $title = l($entity->getTitle(), $url['path'], $options);
         }
         else {
-          $title = check_plain($entity->title);
+          $title = check_plain($entity->getTitle());
         }
         $element[$delta] = array(
           '#prefix' => '<h2>',
@@ -327,56 +345,55 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           '#theme' => 'item_list',
           '#items' => array(
             array(
-              'data' => $entity->type,
-              'class' => array(drupal_html_class($entity->type)),
+              'data' => $entity->getType(),
+              'class' => array(drupal_html_class($entity->getType())),
             ),
           ),
         );
         break;
+      case 'ting_date_default':
+        $element[$delta] = array(
+          '#markup' => $entity->getDate(),
+        );
+        break;
       case 'ting_series_default':
-        if ($entity->serieTitle) {
+        if ($entity->getSerieTitle()) {
           $element[$delta] = array(
-            // should use phrase.title instead of dc.title but at the moment opensearch does not support the use of phrase.title
-            '#markup' => l(check_plain($entity->serieTitle), 'search/ting/' . variable_get('ting_admin_register_serie_title', 'dc.title') . '="' . drupal_strtolower($entity->serieTitle) . '"', array('attributes' => array('class' => array('series')))) . ' : ' . check_plain($entity->serieNumber),
+            // should use phrase.title instead of term.title but at the moment opensearch does not support the use of phrase.title
+            '#markup' => l(
+              $entity->getSerieTitle(),
+              'search/ting/' . variable_get('ting_admin_register_serie_title', 'term.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"',
+              array('attributes' => array('class' => array('series')))
+            ) . ' : ' . $entity->getSerieNumber(),
           );
         }
         break;
       case 'ting_abstract_default':
         $element[$delta] = array(
-          '#markup' => check_plain($entity->abstract),
+          '#markup' => check_plain($entity->getAbstract()),
         );
         break;
       case 'ting_author_default':
         $creators = array();
-        foreach ($entity->creators as $i => $creator) {
-          $creators[] = l($creator, 'search/ting/dc.creator="' . $creator . '"', array('attributes' => array('class' => array('author'))));
-        }
-        $markup_string = '';
-        if (count($creators)) {
-          if ($entity->date != '') {
-            $markup_string = t('By !author_link (@year)', array(
-              '!author_link' => implode(', ', $creators),
-              '@year' => $entity->date, // So wrong, but appears to be the way the data is.
-            ));
+        $_creators = $entity->getCreators();
+        if (!empty($_creators)) {
+          foreach ($_creators as $creator) {
+            $creators[] = l(
+              $creator,
+              'search/ting/term.creator="' . $creator . '"',
+              array('attributes' => array('class' => array('author')))
+            );
           }
-          else {
-            $markup_string = t('By !author_link', array(
-              '!author_link' => implode(', ', $creators),
-            ));
-          }
-        }
-        elseif ($entity->date != '') {
-          $markup_string = t('(@year)', array('@year' => $entity->date));
         }
         $element[$delta] = array(
-          '#markup' => $markup_string,
+          '#markup' => implode(', ', $creators),
         );
         break;
       case 'ting_subjects_default':
-        if (count($entity->subjects) == TRUE) {
+        if (count($entity->getSubjects())) {
           $subjects = array();
-          foreach ($entity->subjects as $subject) {
-            $subjects[] = l($subject, 'search/ting/dc.subject="' . $subject . '"', array('attributes' => array('class' => array('subject'))));
+          foreach ($entity->getSubjects() as $subject) {
+            $subjects[] = l($subject, 'search/ting/term.subject="' . $subject . '"', array('attributes' => array('class' => array('subject'))));
           }
           $element[$delta] = array(
             '#markup' => implode(' ', $subjects),

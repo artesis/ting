@@ -9,8 +9,11 @@
  * Object representing a relation between TingEntites.
  */
 class TingRelation extends DingEntityBase {
+
   public $type = DingEntityBase::NULL;
+
   public $uri = DingEntityBase::NULL;
+
   public $object = DingEntityBase::NULL;
 
   public function __construct($type, $uri, $object = NULL) {
@@ -22,106 +25,224 @@ class TingRelation extends DingEntityBase {
     }
   }
 
-
   public function getObject() {
     return $this->properties['object'];
   }
+
 }
 
 /**
  * Ting object entity.
  */
 class TingEntity extends DingEntity {
-  public $type = DingEntityBase::NULL;
-  public $serieNumber = DingEntityBase::NULL;
-  public $serieTitle = DingEntityBase::NULL;
-  public $record = DingEntityBase::NULL;
-  public $relations = DingEntityBase::NULL;
-  public $localId = DingEntityBase::NULL;
-  public $ownerId = DingEntityBase::NULL;
-  public $creators = DingEntityBase::NULL;
-  public $subjects = DingEntityBase::NULL;
-  public $language = DingEntityBase::NULL;
-  public $date = DingEntityBase::NULL;
-  public $online_url = DingEntityBase::NULL;
-  public $ac_source = DingEntityBase::NULL;
-  public $description = DingEntityBase::NULL;
-  public $contributors = DingEntityBase::NULL;
-  public $isPartOf = DingEntityBase::NULL;
-  public $extent = DingEntityBase::NULL;
-  public $classification = DingEntityBase::NULL;
-  public $isbn = DingEntityBase::NULL;
+
+  protected $type = DingEntityBase::NULL;
+
+  protected $serieNumber = DingEntityBase::NULL;
+
+  protected $serieTitle = DingEntityBase::NULL;
+
+  protected $record = DingEntityBase::NULL;
+
+  protected $relations = DingEntityBase::NULL;
+
+  protected $localId = DingEntityBase::NULL;
+  protected $_localId;
+
+  protected $ownerId = DingEntityBase::NULL;
+
+  protected $creators = DingEntityBase::NULL;
+  protected $_creators = array();
+
+  protected $date = DingEntityBase::NULL;
+  protected $_date;
+
+  protected $subjects = DingEntityBase::NULL;
+
+  protected $language = DingEntityBase::NULL;
+
+  protected $onlineUrl = DingEntityBase::NULL;
+
+  protected $acSource = DingEntityBase::NULL;
+
+  protected $description = DingEntityBase::NULL;
+
+  protected $contributors = DingEntityBase::NULL;
+
+  protected $isPartOf = DingEntityBase::NULL;
+
+  protected $extent = DingEntityBase::NULL;
+
+  protected $classification = DingEntityBase::NULL;
+
+  protected $isbn = DingEntityBase::NULL;
+
+  protected $descriptionSeries = DingEntityBase::NULL;
+
+  protected $image = array();
 
   public function getExtent() {
-    return !empty($this->reply->record['dcterms:extent'][''][0]) ? $this->reply->record['dcterms:extent'][''][0] : FALSE;
+    $extent = $this->get('extent');
+    return !empty($extent) ? $extent : FALSE;
   }
 
-  function getClassification() {
-    $dk5 = '';
-    if (!empty($this->reply->record['dc:subject']['dkdcplus:DK5'][0])) {
-      $dk5 = $this->reply->record['dc:subject']['dkdcplus:DK5'][0];
+  public function getClassification() {
+    return $this->get('subject_dk5');
+  }
 
-      if ($dk5 == 'sk') {
-        return '';
+  public function getSubjectDK5Text() {
+    $result = array();
+    $dk5 = $this->get('subject_dk5text');
+    if (!empty($dk5)) {
+      if (!is_array($dk5)) {
+        $dk5 = array($dk5);
       }
+      $result = $dk5;
     }
-
-    return $dk5;
+    return $result;
   }
 
-  function getIsPartOf() {
-    $this->isPartOf = array();
-    if (!empty($this->reply->record['dcterms:isPartOf'])) {
-      foreach ($this->reply->record['dcterms:isPartOf'] as $type => $dcterms_ispartof) {
-        if ( $type != 'oss:sort' ) {
-          $this->isPartOf = array_merge($this->isPartOf, $dcterms_ispartof);
-        }
+  public function getSubjectDBCS() {
+    $result = array();
+    $subjects = $this->get('subject_dbcs');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
       }
+      $result = $subjects;
     }
-    return $this->isPartOf;
+    return $result;
   }
 
-  // pjo 26-09-11 ; getmethod contributor
-  function getContributors() {
-    $this->contributors = array();
-    if (!empty($this->reply->record['dc:contributor'])) {
-      foreach ($this->reply->record['dc:contributor'] as $type => $dc_contributor) {
-        if ($type != 'oss:sort') {
-          $this->contributors = array_merge($this->contributors, $dc_contributor);
-        }
+  public function getSubjectDBCM() {
+    $result = array();
+    $subjects = $this->get('subject_dbcm');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
       }
+      $result = $subjects;
     }
-    return $this->contributors;
+    return $result;
+  }
+
+  public function getSubjectDBCF() {
+    $result = array();
+    $subjects = $this->get('subject_dbcf');
+    if (!empty($subjects)) {
+      if (!is_array($subjects)) {
+        $subjects = array($subjects);
+      }
+      $result = $subjects;
+    }
+    return $result;
   }
 
 
-  function getLocalId() {
-    return !empty($this->reply->localId) ? $this->reply->localId : FALSE;
+  public function getIsPartOf() {
+    $isPartOf = $this->get('ispartof');
+    return !empty($isPartOf) ? $isPartOf : FALSE;
   }
 
-  function getOwnerId() {
-    return !empty($this->reply->ownerId) ? $this->reply->ownerId : FALSE;
+  /**
+  * Created this method to avoid core-duplications.
+  */
+  private function getContributorTypebased($entry) {
+    $result = array();
+    $contrib = $this->get($entry);
+    if (!empty($contrib)) {
+      if (!is_array($contrib)) {
+        $contrib = array($contrib);
+      }
+      $result = $contrib;
+    }
+    return $result;
   }
 
-  function getType() {
-    return !empty($this->reply->record['dc:type']['dkdcplus:BibDK-Type'][0]) ? $this->reply->record['dc:type']['dkdcplus:BibDK-Type'][0] : FALSE;
+  /**
+  * Return array of fetched contributors.
+  */
+  public function getContributors() {
+    return array_merge(
+      $this->getContributorTypebased('contributor'),
+      $this->getContributorTypebased('contributor_aut'),
+      $this->getContributorTypebased('contributor_dkmed'),
+      $this->getContributorTypebased('contributor_ctb'),
+      $this->getContributorTypebased('contributor_trl')
+    );
   }
 
-  function getTitle() {
-    $title = FALSE;
-    if (!empty($this->reply->record['dc:title'])) {
-      // Use first title with dkdcplus:full if available.
-      if (isset($this->reply->record['dc:title']['dkdcplus:full'])) {
-        $title = $this->reply->record['dc:title']['dkdcplus:full'][0];
+  public function getLocalId() {
+    if (empty($this->_localId)) {
+      if (empty($this->data)) {
+        $this->_localId = NULL;
       }
       else {
-        $title = $this->reply->record['dc:title'][''][0];
+        $this->_localId = $this->data->getLocalId();
       }
     }
-    return $title;
+    return $this->_localId;
   }
 
-  function getSerieNumber() {
+  public function getOwnerId() {
+    if (empty($this->data)) {
+      return NULL;
+    }
+    return $this->data->getOwnerId();
+  }
+
+  public function setLocalId($id) {
+    $this->_localId = $id;
+  }
+
+  public function setDingEntityId($id) {
+    $this->ding_entity_id = $id;
+  }
+
+  public function getType() {
+    if (empty($this->_type)) {
+      $type = $this->get('type_bibdktype');
+      $this->_type = is_array($type) ? current($type) : $type;
+    }
+
+    return $this->_type;
+  }
+
+  /**
+   * @return bool
+   *  true if this item has many types.
+   */
+  public function isMultiType() {
+    return is_array($this->get('type_bibdktype'));
+  }
+
+  public function setType($type) {
+    $this->_type = $type;
+  }
+
+  public function getTitle() {
+    if (empty($this->_title)) {
+      $title = $this->getOneOf('title_full', 'title');
+      $this->_title = $title;
+    }
+    return $this->_title;
+  }
+
+  public function setTitle($title) {
+    $this->_title = $title;
+  }
+
+  public function getYear() {
+    $year = $this->get('date');
+
+    if (is_array($year)) {
+      return current($year);
+    }
+
+    return !empty($year) ? $year : FALSE;
+  }
+
+  public function getSerieNumber() {
     $serie = $this->splitSerie();
     // Last part is the number.
     if (empty($serie[1])) {
@@ -131,11 +252,16 @@ class TingEntity extends DingEntity {
   }
 
   private function splitSerie() {
-    $serie = !empty($this->reply->record['dc:title']['dkdcplus:series'][0]) ? $this->reply->record['dc:title']['dkdcplus:series'][0] : '';
+    $serie = $this->get('title_series');
+    if (is_array($serie)) {
+      // Array here does not contain series title and number.
+      // Ex: 100200:23583828.
+      return FALSE;
+    }
     return explode(';', $serie);
   }
 
-  function getSerieTitle() {
+  public function getSerieTitle() {
     $serie = $this->splitSerie();
     // First part is the title.
     if (empty($serie[0])) {
@@ -144,91 +270,126 @@ class TingEntity extends DingEntity {
     return trim($serie[0]);
   }
 
-  function getAbstract() {
-    return !empty($this->reply->record['dcterms:abstract'][''][0]) ? $this->reply->record['dcterms:abstract'][''][0] : FALSE;
+  public function getAbstract() {
+    $abstract = $this->get('abstract');
+    return !empty($abstract) ? $abstract : FALSE;
   }
 
-  function getRecord() {
-    return !empty($this->reply->record) ? $this->reply->record : false;
-  }
-
-  function getRelations() {
-    // If relations are not set; do another request to get relations
-    if (!isset($this->reply->relationsData)) {
-      $tingClientObject = ting_get_object_request($this->ding_entity_id);
-      if (isset($tingClientObject->relationsData)) {
-        $this->reply->relationsData = $tingClientObject->relationsData;
-      }
+  public function getRelations() {
+    if (!$this->data) {
+      return array();
     }
+
+    $relations = $this->data->getRelations();
 
     $this->relations = array();
     $relation_objects = array();
-    if (isset($this->reply->relationsData)) {
-      $entity_ids = array();
-      foreach ($this->reply->relationsData as $record) {
-        if (isset($record->relationUri) && isset($record->relationObject)) {
-          $entity_ids[] = $record->relationUri;
-        }
-      }
-      if ($entity_ids) {
-        $objects = entity_load('ting_object', array(), array('ding_entity_id' => $entity_ids));
-        foreach ($objects as $object) {
-          $relation_objects[$object->id] = $object;
-        }
-      }
-      foreach ($this->reply->relationsData as $record) {
-        $this->relations[] = new TingRelation($record->relationType, $record->relationUri, isset($relation_objects[$record->relationUri]) ? $relation_objects[$record->relationUri] : NULL);
+    $entity_ids = array();
+
+    foreach ($relations as $relation) {
+      if (!empty($relation['object'])) {
+        $entity_ids[] = $relation['uri'];
       }
     }
+    if (!empty($entity_ids)) {
+      $objects = entity_load('ting_object', array(), array('ding_entity_id' => $entity_ids));
+      foreach ($objects as $object) {
+        $relation_objects[$object->id] = $object;
+      }
+    }
+
+    foreach ($relations as $relation) {
+      $this->relations[] = new TingRelation($relation['type'], $relation['uri'], isset($relation_objects[$relation['uri']]) ? $relation_objects[$relation['uri']] : NULL);
+    }
+
     return $this->relations;
   }
 
-  function getCreators() {
-    $this->creators = array();
-    if (!empty($this->reply->record['dc:creator'])) {
-      foreach ($this->reply->record['dc:creator'] as $type => $dc_creator) {
-        if ($type != 'oss:sort') {
-          $this->creators = array_merge($this->creators, $dc_creator);
-        }
+  public function getCreators() {
+    if (empty($this->_creators)) {
+      $creators = $this->getOneOf('creator', 'creator_aut');
+      if (empty($creators)) {
+        $this->_creators = array();
       }
-    }
-    return $this->creators;
-  }
-
-  function getSubjects() {
-    $this->subjects = array();
-    if (!empty($this->reply->record['dc:subject'])) {
-      foreach ($this->reply->record['dc:subject'] as $type => $dc_subject) {
-        if (!in_array($type, array('dkdcplus:genre', 'dkdcplus:DK5', 'dkdcplus:DK5-Text', 'dkdcplus:DBCO', 'dkdcplus:DBCN'))) {
-          $this->subjects = array_merge($this->subjects, $dc_subject);
-        }
+      elseif (!empty($creators) && !is_array($creators)) {
+        $creators = array($creators);
       }
+      $this->_creators = $creators;
     }
-    return $this->subjects;
+
+    return (array) $this->_creators;
   }
 
-  function getLanguage() {
-    return !empty($this->reply->record['dc:language'][''][0]) ? $this->reply->record['dc:language'][''][0] : FALSE;
+  public function setCreators(array $creators) {
+    $this->_creators = $creators;
   }
 
-  function getDate() {
-    return !empty($this->reply->record['dc:date']) ? $this->reply->record['dc:date'][''][0] : FALSE;
+  public function getCreatorMus() {
+    return $this->get('creator_mus');
   }
 
-  function getOnline_url() {
-    if (isset($this->reply->record['dc:identifier']['dcterms:URI'])) {
-      $url = $this->reply->record['dc:identifier']['dcterms:URI'][0];
+  public function getSubjects() {
+    $subjects = $this->get('subject');
+    if (!empty($subjects) && !is_array($subjects)) {
+      $subjects = array($subjects);
+    }
+    // Merge other subjects.
+    $subjects = array_merge(($subjects != NULL ? $subjects : array()), $this->getSubjectDBCM(), $this->getSubjectDBCF(), $this->getSubjectDBCS());
+
+    return $subjects;
+  }
+
+  public function getLanguage() {
+    $language = $this->get('language');
+    return !empty($language) ? $language : FALSE;
+  }
+
+  public function getLanguageIso() {
+    $language = $this->get('language_iso639_2');
+    return !empty($language) ? $language : FALSE;
+  }
+
+  public function getDate() {
+    if (empty($this->_date)) {
+      $this->_date = $this->get('date');
+    }
+    return $this->_date;
+  }
+
+  public function setDate($date) {
+    $this->_date = $date;
+  }
+
+  public function getSubjectGenre() {
+    $genre = $this->get('subject_genre');
+    if (is_array($genre)) {
+      $genre = implode(', ', $genre);
+    }
+
+    return !empty($genre) ? $genre : FALSE;
+  }
+
+  public function getOnlineUrl() {
+    $url = $this->get('identifier_uri');
+    if (!empty($url)) {
       drupal_alter('ting_online_url', $url, $this);
       return $url;
     }
   }
 
-  function getAc_source() {
-    return !empty($this->reply->record['ac:source'][''][0]) ? $this->reply->record['ac:source'][''][0] : FALSE;
+  public function getSource() {
+    $source = $this->get('source');
+    return !empty($source) ? $source : FALSE;
   }
 
-  function getDescription() {
-    return !empty($this->reply->record['dc:description'][''][0]) ? $this->reply->record['dc:description'][''][0] : FALSE;
+  public function getAcSource() {
+    $source = $this->get('ac_source');
+    return !empty($source) ? $source : FALSE;
+  }
+
+  public function getDescription() {
+    $description = $this->get('description');
+    return !empty($description) ? $description : FALSE;
   }
 
   /**
@@ -236,16 +397,19 @@ class TingEntity extends DingEntity {
    *
    * @return array
    */
-  function getIsbn() {
-    $isbn = array();
+  public function getIsbn() {
+    $isbn = $this->get('identifier_isbn');
 
     // Nothing to do.
-    if (empty($this->reply->record['dc:identifier']['dkdcplus:ISBN'])) {
-      return $isbn;
+    if (empty($isbn)) {
+      return array();
+    }
+
+    if (!is_array($isbn)) {
+      $isbn = array($isbn);
     }
 
     // Get ISBN numbers.
-    $isbn = $this->reply->record['dc:identifier']['dkdcplus:ISBN'];
     foreach ($isbn as $k => $number) {
       $isbn[$k] = str_replace(array(' ', '-'), '', $number);
     }
@@ -253,102 +417,146 @@ class TingEntity extends DingEntity {
     return $isbn;
   }
 
+  public function getIssn() {
+    return $this->get('identifier_issn');
+  }
+
+  public function getDescriptionSeries() {
+    return $this->get('description_series');
+  }
+
+  public function getFormat() {
+    return $this->get('format');
+  }
+
+  public function getLanguageSpoken() {
+    return $this->get('language_spoken');
+  }
+
+  public function getLanguageSubtitles() {
+    return $this->get('language_subtitles');
+  }
+
+  public function getSpatial() {
+    return $this->get('spatial');
+  }
+
+  public function getHaspartTrack() {
+    return $this->get('haspart_track');
+  }
+
+  public function getIsreferencedby() {
+    return $this->get('isreferencedby');
+  }
+
+  public function getVersion() {
+    return $this->get('version');
+  }
+
+  public function getPublisher() {
+    return $this->get('publisher');
+  }
+
+  public function getRights() {
+    return $this->get('rights');
+  }
+
+  public function getAudience() {
+    return $this->get('audience');
+  }
+
+  public function getAudienceAge() {
+    return $this->get('audience_age');
+  }
+
+  public function getAudiencePegi() {
+    return $this->get('audience_pegi');
+  }
+
+  public function getAudienceMedieraad() {
+    return $this->get('audience_medieraad');
+  }
+
+  public function get($key) {
+    if (empty($this->data)) {
+      return NULL;
+    }
+    return $this->data->get($key);
+  }
+
+  public function __get($prop) {
+    if (method_exists($this, 'get' . ucfirst($prop))) {
+      if (module_exists('devel')) {
+        kpr(ddebug_backtrace());
+      }
+      $exception = new Exception('Use getter methor for: ' . $prop);
+      watchdog(
+        'ting',
+        t('Use getter methor for: @prop, <pre>!trace</pre>'),
+        array('@prop' => $prop, '!trace' => $exception->getTraceAsString()),
+        WATCHDOG_CRITICAL
+      );
+      throw $exception;
+    }
+
+    return parent::__get($prop);
+  }
+
+  public function getFormatsAvailable() {
+    if (empty($this->data)) {
+      return NULL;
+    }
+    return $this->data->getFormats();
+  }
+
+  public function getIdentifier() {
+    return $this->get('identifier');
+  }
+
+  public function getAcIdentifier() {
+    return $this->get('ac_identifier');
+  }
+
+  public function getIdentifierUri() {
+    return $this->get('identifier_uri');
+  }
+
+  /**
+   * Set cover image path.
+   *
+   * @param string $img
+   *   Image path.
+   * @param string $style
+   *   Image style.
+   */
+  public function setImage($img, $style = '-none-') {
+    $this->image[$style] = $img;
+  }
+
+  public function getImage($style = '-none-') {
+    if (empty($this->image[$style])) {
+      return NULL;
+    }
+    return $this->image[$style];
+  }
+
+  /**
+   * Get first non-empty value of the fields.
+   * Accepts any number of field names as parameters.
+   *
+   * @return NULL | mixed
+   */
+  public function getOneOf() {
+    $fields = func_get_args();
+    $result = NULL;
+    foreach ($fields as $field) {
+      $value = $this->get($field);
+      if (!empty($value)) {
+        $result = $value;
+        break;
+      }
+    }
+    return $result;
+  }
+
 }
-
-/**
- * Ting collection entity.
- */
-class TingCollection extends DingEntityCollection {
-  public $title = DingEntityBase::NULL;
-  public $types = DingEntityBase::NULL;
-  public $types_count = DingEntityBase::NULL;
-  public $primary_object = DingEntityBase::NULL;
-
-  function __construct($id) {
-    $this->ding_entity_id = $id;
-    parent::__construct();
-  }
-
-  function getTitle() {
-    foreach ($this->reply->objects as &$object) {
-      // Find the title of the object that was used to fetch this collection.
-      if ($object->id == $this->ding_entity_id && !empty($object->record['dc:title'])) {
-        if (isset($object->record['dc:title']['dkdcplus:full'])) {
-          return $object->record['dc:title']['dkdcplus:full'][0];
-        }
-        else {
-          return $object->record['dc:title'][''][0];
-        }
-      }
-    }
-    // If we couldn't find the object, use the title of the first object.
-    $title = FALSE;
-    if (isset($this->reply->objects[0]->record['dc:title'])) {
-      if (isset($this->reply->objects[0]->record['dc:title']['dkdcplus:full'])) {
-        $title = $this->reply->objects[0]->record['dc:title']['dkdcplus:full'][''][0];
-      }
-      else {
-        $title = $this->reply->objects[0]->record['dc:title'][''][0];
-      }
-    }
-    return $title;
-  }
-
-  function getEntities() {
-    $this->entities = array();
-    if (isset($this->reply->objects)) {
-      $entity_ids = array();
-      foreach ($this->reply->objects as $record) {
-        // Pull the entity with the same id at the top.
-        if ($record->id == $this->id) {
-          array_unshift($entity_ids, $record->id);
-        }
-        else {
-          $entity_ids[] = $record->id;
-        }
-      }
-      $entities = entity_load('ting_object', array(), array('ding_entity_id' => $entity_ids));
-
-      // Can't pass overloaded $this->types as reference to
-      // _ting_type_lang_sort(), so we're using a temporary var.
-      $types_tmp = array();
-      $this->entities = _ting_type_date_sort($entities, $types_tmp);
-      $this->types = $types_tmp;
-    }
-    return $this->entities;
-  }
-
-  function getTypes() {
-    $types = array();
-    foreach ($this->entities as $object) {
-      $types[] = $object->type;
-      foreach ($object->subjects as $subject) {
-        if (!isset($subject_count[$subject])) {
-          $subject_count[$subject] = 0;
-        }
-        $subject_count[$subject]++;
-      }
-    }
-    return $this->types = array_unique($types);
-  }
-
-  function getTypes_count() {
-    $types = array();
-    foreach ($this->entities as $object) {
-      if (!isset($types[$object->type])) {
-        $types[$object->type] = 1;
-      }
-      else {
-        $types[$object->type]++;
-      }
-    }
-    return $this->types_count = $types;
-  }
-
-  function getPrimary_object() {
-    if ($entities = $this->entities) {
-      return reset($entities);
-    }
-  }
-}
-
