@@ -482,13 +482,17 @@ function ting_ding_entity_is($object, $class) {
  * permissions, a warning if the datawell was queried more than once.
  */
 function ting_page_alter(&$page) {
+  if (!variable_get('ting_enable_logging', FALSE)) {
+    return;
+  }
+
   $calls = &drupal_static('ting_execute_cache');
   if (sizeof($calls) > 5) {
     $calls_str = array();
     foreach ($calls as $call) {
       $calls_str[] = print_r($calls, TRUE);
     }
-    watchdog('ting', 'Warning, ting_execute called @x times:<br />"@queries"', array('@x' => sizeof($calls), '@queries' => join('" "', $calls_str)), WATCHDOG_WARNING);
+    watchdog('ting', 'Warning, ting_execute called @x times:<br />"@queries"', array('@x' => sizeof($calls), '@queries' => join('" "', $calls_str)), WATCHDOG_NOTICE);
     if (function_exists('dpm') && user_access('access devel information')) {
       drupal_set_message(t('Warning, ting_execute called @x times.', array('@x' => sizeof($calls))), 'error');
       dpm($calls, 'ting_execute queries:');
