@@ -494,7 +494,7 @@ function ting_page_alter(&$page) {
     }
     watchdog('ting', 'Warning, ting_execute called @x times:<br />"@queries"', array('@x' => sizeof($calls), '@queries' => join('" "', $calls_str)), WATCHDOG_NOTICE);
     if (function_exists('dpm') && user_access('access devel information')) {
-      drupal_set_message(t('Warning, ting_execute called @x times.', array('@x' => sizeof($calls))), 'error');
+      drupal_set_message(t('Warning, ting_execute called @x times.', array('@x' => sizeof($calls))), 'warning');
       dpm($calls, 'ting_execute queries:');
     }
   }
