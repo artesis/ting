@@ -485,7 +485,7 @@ function ting_execute($request) {
   }
   catch (TingClientException $e) {
     timer_stop('ting');
-    watchdog('ting client', 'Error performing request: ' . $e->getMessage(), NULL, WATCHDOG_ERROR, 'http://' . $_SERVER["HTTP_HOST"] . request_uri());
+    watchdog('ting client', 'Error performing request: ' . $e->getMessage(), NULL, WATCHDOG_NOTICE, 'http://' . $_SERVER["HTTP_HOST"] . request_uri());
     return FALSE;
   }
 }
