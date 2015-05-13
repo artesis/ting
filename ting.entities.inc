@@ -168,7 +168,8 @@ class TingEntity extends DingEntity {
       $this->getContributorTypebased('contributor_aut'),
       $this->getContributorTypebased('contributor_dkmed'),
       $this->getContributorTypebased('contributor_ctb'),
-      $this->getContributorTypebased('contributor_trl')
+      $this->getContributorTypebased('contributor_trl'),
+      $this->getContributorTypebased('contributor_edt')
     );
   }
 
