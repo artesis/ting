@@ -533,7 +533,7 @@ function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
 /**
  * @param object $request - The TingClient object
  * @return TingClientScanRequest
- *
+ */
 function ting_add_agency(TingClientScanRequest $request) {
   $agency = variable_get('ting_agency', FALSE);
   if ($agency) {
