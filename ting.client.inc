@@ -427,10 +427,8 @@ function ting_get_request_factory($type) {
   if (empty($url_variables)) {
     $url_variables = array(
       'search' => 'ting_search_url',
-      'scan' => 'ting_scan_url',
       'object' => 'ting_search_url',
       'collection' => 'ting_search_url',
-      'spell' => 'ting_spell_url',
       'recommendation' => 'ting_recommendation_url',
       'relatedObjects' => 'ting_search_url',
     );
@@ -535,7 +533,7 @@ function ting_do_scan($query, $phrase = 'anyIndexes', $num_results = 10) {
 /**
  * @param object $request - The TingClient object
  * @return TingClientScanRequest
- */
+ *
 function ting_add_agency(TingClientScanRequest $request) {
   $agency = variable_get('ting_agency', FALSE);
   if ($agency) {
