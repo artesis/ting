@@ -173,14 +173,15 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
     $request->setTermsInFacets($terms);
   }
 
-  if (isset($options['sort']) && $options['sort']) {
+  if (!empty($options['sort'])) {
     $request->setSort($options['sort']);
   }
 
   // Apply custom ranking if enabled.
-  if (variable_get('ting_ranking_custom', FALSE) && variable_get('ting_ranking_fields', array()) && !isset($options['sort'])) {
+  $ting_ranking_fields = variable_get('ting_ranking_fields', array());
+  if (variable_get('ting_ranking_custom', FALSE) && !empty($ting_ranking_fields) && !isset($options['sort'])) {
     $fields = array();
-    foreach (variable_get('ting_ranking_fields', array()) as $field) {
+    foreach ($ting_ranking_fields as $field) {
       $fields[] = array(
         'fieldName' => $field['field_name'],
         'fieldType' => $field['field_type'],
@@ -202,12 +203,10 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
         'weight' => 1
       );
 
-      $userDefinedRanking = array(
+      $request->userDefinedRanking = array(
         'tieValue' => 0.1,
         'rankField' => $fields
       );
-
-      $request->setParameter('userDefinedRanking', $userDefinedRanking);
     }
   }   // Otherwise, use the ranking setting.
   else {
@@ -284,62 +283,6 @@ function ting_execute_cache($request) {
     }
 
   }
-
-
-/*
-  // Cache any sub-objects (mostly true for collections).
-  if (isset($reply->objects)) {
-    foreach ($reply->objects as $object) {
-
-      // Cache any relations.
-      if (isset($object->relations)) {
-        foreach ($object->relations as $relation) {
-          if (isset($relation->id)) {
-            ting_cache_set($relation->id, $relation);
-          }
-        }
-      }
-    }
-    // Cache the reply as the first object's id. This is for collections.
-    if (!isset($reply->id) and isset($reply->objects[0])) {
-      ting_cache_set($reply->objects[0]->id, $reply);
-    }
-  }
-
-  // Cache any collections. Done after objects to ensure that collections take
-  // precedence.
-  if (isset($reply->collections)) {
-    foreach ($reply->collections as &$collection) {
-      if (isset($collection->objects[0])) {
-        foreach ($collection->objects as $object) {
-          // Cache any relations.
-          if (isset($object->relations)) {
-            foreach ($object->relations as $relation) {
-              if (isset($relation->id)) {
-                ting_cache_set($relation->id, $relation);
-              }
-            }
-          }
-          ting_cache_set($object->id, $object);
-        }
-
-        ting_cache_set($collection->objects[0]->id, $collection);
-      }
-    }
-  }
-
-  // Cache any relations.
-  if (isset($reply->relations)) {
-    foreach ($reply->relations as $object) {
-      ting_cache_set($object->id, $object);
-    }
-  }
-
-  // Lastly cache the reply itself if it has an id.
-  if (isset($reply->id)) {
-    ting_cache_set($reply->id, $reply);
-  }
-*/
 
   return $reply;
 }
