@@ -370,10 +370,8 @@ function ting_get_request_factory($type) {
   if (empty($url_variables)) {
     $url_variables = array(
       'search' => 'ting_search_url',
-      'scan' => 'ting_scan_url',
       'object' => 'ting_search_url',
       'collection' => 'ting_search_url',
-      'spell' => 'ting_spell_url',
       'recommendation' => 'ting_recommendation_url',
       'relatedObjects' => 'ting_search_url',
     );
