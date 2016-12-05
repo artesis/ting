@@ -267,32 +267,50 @@ class TingEntity extends DingEntity {
     return !empty($year) ? $year : FALSE;
   }
 
-  public function getSerieNumber() {
-    $serie = $this->splitSerie();
-    // Last part is the number.
-    if (empty($serie[1])) {
-      return FALSE;
-    }
-    return $serie[1];
-  }
-
+  /**
+   * Helper function for processing ting_series.
+   *
+   * @return array|null
+   *   Array of series titles.
+   */
   private function splitSerie() {
-    $serie = $this->get('title_series');
-    if (is_array($serie)) {
-      // Array here does not contain series title and number.
-      // Ex: 100200:23583828.
-      return FALSE;
+    $series = $this->get('title_series');
+    if (!is_array($series)) {
+      $series = array($series);
     }
-    return explode(';', $serie);
+
+    foreach ($series as $k => $serie) {
+      if (strpos($serie, ';')) {
+        $serie = explode(';', $serie);
+        $series[$k] = array(
+          'title' => trim($serie[0]),
+          'serie_number' => trim($serie[1]),
+        );
+      }
+      else {
+        $series[$k] = array(
+          'title' => trim($serie),
+        );
+      }
+    }
+
+    return $series;
   }
 
+  /**
+   * Get the serie title.
+   *
+   * @return array|bool
+   *   Array of series titles.
+   */
   public function getSerieTitle() {
-    $serie = $this->splitSerie();
-    // First part is the title.
-    if (empty($serie[0])) {
+    $series = $this->splitSerie();
+    // If title key of first element is empty, return FALSE.
+    if (empty($series[0]['title'])) {
       return FALSE;
     }
-    return trim($serie[0]);
+
+    return $series;
   }
 
   public function getAbstract() {
