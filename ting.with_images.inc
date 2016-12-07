@@ -28,7 +28,7 @@ function ting_get_objects_with_images($query = '', $count = 0, $sort = '', $imag
   module_load_include('pages.inc', 'ting_covers');
 
   $objects = array();
-  $request = '(' . $query . ')';
+  $request = _ting_search_quote($query);
   $page = 1;
 
   $covers_service = TRUE;
