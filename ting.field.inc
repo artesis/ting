@@ -340,6 +340,7 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           '#markup' => $title,
         );
         break;
+
       case 'ting_type_default':
         $element[$delta] = array(
           '#theme' => 'item_list',
@@ -351,28 +352,46 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           ),
         );
         break;
+
       case 'ting_date_default':
         $element[$delta] = array(
           '#markup' => $entity->getDate(),
         );
         break;
+
       case 'ting_series_default':
         if ($entity->getSerieTitle()) {
+          $series = array();
+          $_series = $entity->getSerieTitle();
+          if (!empty($_series)) {
+            foreach ($_series as $key => $serie) {
+              $series[] = l(
+                $serie['title'],
+                'search/ting/' . variable_get(
+                  'ting_admin_register_serie_title',
+                  'term.title'
+                ) . '="' . drupal_strtolower($serie['title']) . '"',
+                array('attributes' => array('class' => array('series')))
+              );
+              if (!empty($serie['serie_number'])) {
+                $series[$key] .= ': ' . $serie['serie_number'];
+              }
+            }
+          }
           $element[$delta] = array(
-            // should use phrase.title instead of term.title but at the moment opensearch does not support the use of phrase.title
-            '#markup' => l(
-              $entity->getSerieTitle(),
-              'search/ting/' . variable_get('ting_admin_register_serie_title', 'term.title') . '="' . drupal_strtolower($entity->getSerieTitle()) . '"',
-              array('attributes' => array('class' => array('series')))
-            ) . ' : ' . $entity->getSerieNumber(),
+            // Should use phrase.title instead of term.title but at the
+            // moment opensearch does not support the use of phrase.title.
+            '#markup' => implode(', ', $series),
           );
         }
         break;
+
       case 'ting_abstract_default':
         $element[$delta] = array(
           '#markup' => check_plain($entity->getAbstract()),
         );
         break;
+
       case 'ting_author_default':
         $creators = array();
         $_creators = $entity->getCreators();
@@ -389,6 +408,7 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
           '#markup' => implode(', ', $creators),
         );
         break;
+
       case 'ting_subjects_default':
         if (count($entity->getSubjects())) {
           $subjects = array();
