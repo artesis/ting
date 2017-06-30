@@ -73,7 +73,10 @@ function ting_get_object($object_id, $collection = FALSE) {
       $object = $result->getObject();
 
       // Update data if it loaded from cache.
-      $object->setData($res->getData());
+      if (is_a($result, 'TingObjectResult')) {
+        $obj = $result->getObject();
+        $object->setData($obj->getData());
+      }
     }
   }
 
