@@ -73,7 +73,10 @@ function ting_get_object($object_id, $collection = FALSE) {
       $object = $result->getObject();
 
       // Update data if it loaded from cache.
-      $object->setData($res->getData());
+      if (is_a($result, 'TingObjectResult')) {
+        $obj = $result->getObject();
+        $object->setData($obj->getData());
+      }
     }
   }
 
@@ -141,13 +144,6 @@ function ting_get_objects($ids) {
 function ting_do_search($query, $page = 1, $results_per_page = 10, $options = array()) {
   /* @var $request TingSearchRequest */
   $request = ting_get_request_factory('search');
-
-  $agency = variable_get('ting_agency', FALSE);
-  if ($agency && variable_get('ting_filter_by_local_holdings', 0)) {
-    // Limit the search to materials from the local library. From well 3.5 each
-    // library is no longer isolated.
-    $query = $query . ' and holdingsitem.agencyid="' . $agency . '"';
-  }
 
   $request->setQuery($query);
   $request->setLimits($results_per_page * ($page - 1) + 1, $results_per_page);
@@ -429,6 +425,11 @@ function ting_add_relations($request, $type = 'full') {
  *   Result of the request or false if an error occurs.
  */
 function ting_execute($request) {
+  if (variable_get('ting_filter_by_local_holdings', 0) && $request->getResultClass() == 'TingSearchResult') {
+    // Limit the request from the local library. From well 3.5 each
+    // library is no longer isolated.
+    $request->setQueryPrefix('holdingsitem.agencyid=' . $request->getAgency());
+  }
 
   try {
     timer_start('ting');
