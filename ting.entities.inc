@@ -29,6 +29,9 @@ class TingRelation extends DingEntityBase {
     return $this->properties['object'];
   }
 
+  public function getUri() {
+    return $this->properties['uri'];
+  }
 }
 
 /**
