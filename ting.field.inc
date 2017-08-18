@@ -330,6 +330,10 @@ function ting_field_formatter_view($entity_type, $entity, $field, $instance, $la
             $options = array();
           }
           $title = l($entity->getTitle(), $url['path'], $options);
+
+          if (!$entity->getLocalId()) {
+            $title = check_plain($entity->getTitle());
+          }
         }
         else {
           $title = check_plain($entity->getTitle());
