@@ -425,7 +425,11 @@ function ting_add_relations($request, $type = 'full') {
  *   Result of the request or false if an error occurs.
  */
 function ting_execute($request) {
-  if (variable_get('ting_filter_by_local_holdings', 0) && $request->getResultClass() == 'TingSearchResult') {
+  $filtered_classes = array(
+    'TingSearchResult',
+    'TingSearchRelatedResult'
+  );
+  if (variable_get('ting_filter_by_local_holdings', 0) && in_array($request->getResultClass(), $filtered_classes)) {
     // Limit the request from the local library. From well 3.5 each
     // library is no longer isolated.
     $request->setQueryPrefix('holdingsitem.agencyid=' . $request->getAgency());
