@@ -266,13 +266,11 @@ function ting_do_search($query, $page = 1, $results_per_page = 10, $options = ar
  *
  * @param object $request
  *   The request.
+ *
+ * @return mixed
+ *   Search result or FALSE on failure.
  */
 function ting_execute_cache($request) {
-  $calls = &drupal_static(__FUNCTION__);
-  if (!isset($calls)) {
-    $calls = array();
-  }
-  $calls[] = $request->getParameters();
   $reply = ting_execute($request);
 
   if (empty($reply)) {
