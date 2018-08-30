@@ -433,6 +433,12 @@ function ting_execute($request) {
     $request->setQueryPrefix('holdingsitem.agencyid=' . $request->getAgency());
   }
 
+  // Get additional parameters from other modules.
+  $params = module_invoke_all('ting_pre_execute', $request);
+  if (!empty($params)) {
+    $request->setParameters($params);
+  }
+
   try {
     timer_start('ting');
     $response = ting_get_client()->execute($request);
