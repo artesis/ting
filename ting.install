@@ -195,3 +195,10 @@ function ting_ding_entity_fields() {
     ),
   );
 }
+
+/**
+ * Ensure libraries use the latest version of opensearch (5.2).
+ */
+function ting_update_7001() {
+  variable_set('ting_search_url', 'https://opensearch.addi.dk/b3.5_5.2/');
+}
