@@ -253,6 +253,13 @@ class TingEntity extends DingEntity {
       $title = $this->getOneOf('title_full', 'title');
       $this->_title = $title;
     }
+
+    // If the record is unavailable then "title" property will be null, so we
+    // will show placeholder message.
+    if (empty($this->_title)) {
+      $this->_title = t('Title information is currently missing.');
+    }
+
     return $this->_title;
   }
 
