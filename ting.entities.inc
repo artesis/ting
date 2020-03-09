@@ -82,6 +82,8 @@ class TingEntity extends DingEntity {
 
   protected $descriptionSeries = DingEntityBase::NULL;
 
+  protected $notes = DingEntityBase::NULL;
+
   protected $image = array();
 
   public function getExtent() {
@@ -610,6 +612,13 @@ class TingEntity extends DingEntity {
       }
     }
     return $result;
+  }
+
+  /**
+   * Get notes property.
+   */
+  public function getNotes() {
+    return $this->get('notes');
   }
 
 }

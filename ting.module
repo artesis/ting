@@ -487,7 +487,7 @@ function ting_page_alter(&$page) {
   }
 
   $calls = &drupal_static('ting_execute_cache');
-  if (sizeof($calls) > 5) {
+  if (is_array($calls) && sizeof($calls) > 5) {
     $calls_str = array();
     foreach ($calls as $call) {
       $calls_str[] = print_r($calls, TRUE);
@@ -880,9 +880,10 @@ function ting_object_view($object, $view_mode = 'full', $langcode = NULL) {
   // Cache rendering phase if global cache enabled.
   $ttl = variable_get('ting_cache_lifetime', FALSE);
   if ($ttl) {
+    $object_id = !empty($object->getId()) ? $object->getId() : sha1($object->getTitle());
     $build += array(
       '#cache' => array(
-        'cid' => 'ting_view:' . $langcode . ':' . $view_mode . ':' . $object->getId(),
+        'cid' => 'ting_view:' . $langcode . ':' . $view_mode . ':' . $object_id,
         'expire' => $ttl,
       ),
     );
